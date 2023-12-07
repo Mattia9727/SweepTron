@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, find_device
 
 import constants as c
-from client.server_conn_utils import send_files_to_server
+from server_conn_utils import send_files_to_server
 
 
 def iq_capture():
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     #t = Thread(target=send_files_to_server)
     #t.start()
 
-    #find_device()
+    find_device()
     #main()
-    iq_capture()
+    #iq_capture()
 
