@@ -28,7 +28,7 @@ def iq_capture():
     print(get_error(conn))
     send_command(conn,':MEAS:IQ:CAPT\n')
     print(get_error(conn))
-    print(get_message(conn,':STATus:OPERation?\n'))
+    print(get_message(conn,':STATus:OPERation?\n'))    # TODO: :MMEMory:STORe:CAPTure, :MMEMory:DATA <string>,<string>,<block data>
     conn.close()
 
 
