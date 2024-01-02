@@ -38,10 +38,15 @@ frequency_center = np.zeros(num_frequencies)
 grafici_dir = "grafici/"
 logs_dir = "./logs/"
 
-error_log_file = 'log_errors.txt'
-log_file = 'log_data'
+error_log_file = '../data/log_errors.txt'
+log_file = '../data/log_file.txt'
+log_iq_file = '../data/iq_log_file.dgz'
+compressed_log_file = '../data/iq_compressed_log_file.txt'
 
-transmission_freq = [718.0, 890.0]
+transmission_freq = [718.0, 890.0]         #TODO: ora ci sono freq. casuali, andranno messe quelle "vere" di invio. Possono essere recuperate dinamicamente?
 transmission_freq_used = False
 
-sending = False
+transferedToday = 0
+isTransfering = False
+
+pika_params = "localhost"
