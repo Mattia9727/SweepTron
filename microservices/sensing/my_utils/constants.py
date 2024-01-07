@@ -49,4 +49,4 @@ transmission_freq_used = False
 transferedToday = 0
 isTransfering = False
 
-pika_params = "localhost"
+pika_params = "localhost" #Possibilità: "localhost", "rabbitmq"
