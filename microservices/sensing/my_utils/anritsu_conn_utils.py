@@ -7,8 +7,9 @@ from . import constants as c
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
 # TCP_IP = '192.168.214.70'
-TCP_IP = '127.0.0.1'
-TCP_PORT = 9001
+TCP_IP = 'localhost'
+# TCP_PORT = 9001
+TCP_PORT = 59001
 BUFFER_SIZE = 8192
 TIMEOUT = 1  # amount of time in s between one command and the following time
 
@@ -19,7 +20,7 @@ def find_device():
     try:
         # Connessione al dispositivo
         client_socket.connect((TCP_IP, TCP_PORT))
-
+        print(get_message(client_socket, '*IDN?\n'))
     except Exception as e:
         print("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT), str(e))
         exit(0)
@@ -35,6 +36,7 @@ def connect_to_device():
     try:
         # Connessione al dispositivo
         client_socket.connect((TCP_IP, TCP_PORT))
+
 
     except Exception as e:
         print("Errore durante la comunicazione con il dispositivo:", str(e))
@@ -72,13 +74,13 @@ def get_message(conn, message, wait=-1):
 
     if wait != -1:
         conn.settimeout(TIMEOUT)
-    if isinstance(recv_message, str):
-        return recv_message
-    return recv_message.decode()
+    if isinstance(recv_message, bytes):
+        return recv_message.decode()
+    return recv_message
 
 
 def update_error_log(message):
-    error_log_file_name = os.path.join(c.logs_dir, c.error_log_file)
+    error_log_file_name = os.path.join(c.error_log_file)
     error_log_file = open(error_log_file_name, 'a')
     current_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     error_log_file.write(str(format(current_timestamp)) + " " + message + "\n")
@@ -105,7 +107,7 @@ def get_error(conn):
         else:
             break
 
-def setup_anritsu_device(conn):
+def setup_anritsu_device(conn): #TODO: Vedere comandi per configurare ultraportable come Spectrum Master
     send_command(conn,':MODE SPEC\n')
     send_command(conn,':CONFigure:CHPower\n')
     send_command(conn,':FSTRength:STATe 1\n')

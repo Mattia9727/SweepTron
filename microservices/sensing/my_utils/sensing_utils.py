@@ -58,10 +58,10 @@ def measure(conn, location_name):
         os.makedirs(c.logs_dir)
 
     # Create and open a TXT file to record data
-    log_file = open(os.path.join(c.logs_dir, c.log_file + '.txt'), 'a')
+    log_file = open(c.log_file, 'a')
 
-    # Create and open a CSV file to record data
-    csv_file = open(os.path.join(c.logs_dir, c.log_file + '.csv'), 'a')
+    # # Create and open a CSV file to record data
+    # csv_file = open(os.path.join(c.log_file + '.csv'), 'a')
 
     curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
@@ -96,8 +96,8 @@ def measure(conn, location_name):
                 log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
                                                    measured_emf_matrix_base_station[f, index_samples]))
 
-            csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
-                                               measured_emf_matrix_base_station[f, index_samples]))
+            # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+            #                                    measured_emf_matrix_base_station[f, index_samples]))
             time.sleep(c.inter_sample_time)
 
         plot_measure(measured_emf_matrix_base_station, f)
@@ -108,7 +108,7 @@ def measure(conn, location_name):
 
     # Close the log files
     log_file.close()
-    csv_file.close()
+    # csv_file.close()
     # Add code to stop the loop or exit gracefully if needed
 
 
@@ -122,18 +122,19 @@ def get_gps_info(conn):
     # PARTE GPS, DA VEDERE
     location_name = "Roma Tor Vergata"
 
-    gps_raw = get_message(conn, ':FETCh:GPS?\n')  # Fetching the GPS
-    gps_array_split = gps_raw.split(',')
+    gps_raw = get_message(conn, ':FETCh:GPS?\n')  # Fetching the GPS TODO: Ultraportable non ha GPS! Come fare?
+    if gps_raw != None:
+        gps_array_split = gps_raw.split(',')
 
-    curr_latitude = 0
-    curr_longitude = 0
-    curr_timestamp = 0
+        curr_latitude = 0
+        curr_longitude = 0
+        curr_timestamp = 0
 
-    if gps_array_split[0] == 'GOOD FIX':
-        curr_latitude = float(gps_array_split[2])
-        curr_longitude = float(gps_array_split[3])
-        curr_timestamp = gps_array_split[1]
+        if gps_array_split[0] == 'GOOD FIX':
+            curr_latitude = float(gps_array_split[2])
+            curr_longitude = float(gps_array_split[3])
+            curr_timestamp = gps_array_split[1]
 
-        location_name = get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp)
+            location_name = get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp)
 
     return location_name
