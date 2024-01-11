@@ -22,7 +22,6 @@ def callback_processing_data(ch, method, properties, body):
 
 
 def start_processing_data():
-    time.sleep(20)
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
     channel.queue_declare(queue='P-T')
@@ -35,4 +34,5 @@ def start_processing_data():
 
 if __name__ == "__main__":
     print("Processing microservice ON")
+    time.sleep(60)
     start_processing_data()

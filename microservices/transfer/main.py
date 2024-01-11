@@ -34,6 +34,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
 
 if __name__ == "__main__":
     print("Transfer microservice ON")
+    time.sleep(60)
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
 

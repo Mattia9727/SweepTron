@@ -11,7 +11,7 @@ TCP_IP = 'localhost'
 # TCP_PORT = 9001
 TCP_PORT = 59001
 BUFFER_SIZE = 8192
-TIMEOUT = 1  # amount of time in s between one command and the following time
+TIMEOUT = 3  # amount of time in s between one command and the following time
 
 
 def find_device():
@@ -107,7 +107,7 @@ def get_error(conn):
         else:
             break
 
-def setup_anritsu_device(conn): #TODO: Vedere comandi per configurare ultraportable come Spectrum Master
+def setup_anritsu_device_MS2090A(conn):
     send_command(conn,':MODE SPEC\n')
     send_command(conn,':CONFigure:CHPower\n')
     send_command(conn,':FSTRength:STATe 1\n')
@@ -116,6 +116,9 @@ def setup_anritsu_device(conn): #TODO: Vedere comandi per configurare ultraporta
     send_command(conn,':POW:RF:ATT:AUTO OFF\n')  # Automatic input attenuation coupling
     send_command(conn,':POW:RF:ATT 0 DB\n')  # Set attenuation to 0 dB
     send_command(conn,':POW:RF:GAIN:STAT OFF\n')  # Turn off pre-amplifier for initial setting
+
+def setup_anritsu_device_MS2760A(conn):
+    send_command(conn,':CONFigure:CHPower\n')
 
 def setup_for_single_freq(conn,f):
     selected_frequency_start = c.frequency_start[f]

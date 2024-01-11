@@ -4,9 +4,10 @@ print_debug=1
 iq_mode = 0
 
 antenna_file = "AARONIA_6080"
+antenna_factor = []
 
 initial_reference_level = 6  # initial reference level in V/m
-# y_ticks = 10  # number of y ticks on the screen of the spectrum analyzer
+y_ticks = 10  # number of y ticks on the screen of the spectrum analyzer
 # minimum_reference_level = 0  # in V/m
 command_rolling_average_time = 2.0  # amount of time in s to compute the rolling average of the trace
 inter_sample_time = 0.5  # inter sample time between one chp measurement sample and the following one
@@ -50,3 +51,13 @@ transferedToday = 0
 isTransfering = False
 
 pika_params = "localhost" #Possibilità: "localhost", "rabbitmq"
+
+device_type = "MS2760A"   #Dispositivi gestiti: MS2760A, MS2090A
+
+debug_transfer = True
+
+minimum_level_no_pre_amp=[]
+initial_guard_amplitude=[]
+
+for i in range(len(frequency_start)):
+    initial_guard_amplitude.append(20)
