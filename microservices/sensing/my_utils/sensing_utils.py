@@ -15,7 +15,7 @@ import time
 def interp_af(freqs):
 
     # Carica i dati dal file di testo
-    af_keysight = np.loadtxt("../../data/af_keysight.txt")
+    af_keysight = np.loadtxt(c.af_keysight)
 
     # Estrai le frequenze in kHz dalla prima colonna
     freq_mhz = af_keysight[:, 0] * 1000
@@ -61,7 +61,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks):
 
     for i in range(time_search_max):
         time.sleep(1)
-        send_command(conn,':CALC:MARKer1:MINimum\n')  # put marker on minimum
+        send_command(conn,':CALC:MARKer1:MINimum\n')  # put marker on minimum #TODO: NON ESISTE! DEVO VEDERE COME FARE
         output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
         curr_min_marker = float(output_string)
 
@@ -204,9 +204,9 @@ def measureMS2760A(conn, location_name):
 
     for f in range(c.num_frequencies):
 
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude, 3, c.y_ticks)
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude, 3, c.y_ticks)
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude, 3, c.y_ticks)
+        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
+        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
+        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))

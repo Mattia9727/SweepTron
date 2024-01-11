@@ -41,7 +41,7 @@ def sensing(ch):
 
 if __name__ == "__main__":
     print("Sensing microservice ON")
-    time.sleep(60)
+    #time.sleep(60)
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
