@@ -125,8 +125,8 @@ def iq_measureMS2090A(conn, location_name):
         send_command(conn, ":SENS:AVER:TYPE NORM")
 
         # Prepare per IQ Capture
-        send_command(conn, "IQ:BAND 267000 HZ")
-        send_command(conn, ":IQ:LENG 200 ms")
+        send_command(conn, "IQ:SAMP SB19")
+        send_command(conn, ":IQ:LENG 1 s")
         send_command(conn, ":IQ:BITS 16")
         send_command(conn, ":IQ:MODE SING")
         send_command(conn, ":IQ:TIME OFF")

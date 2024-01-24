@@ -2,7 +2,6 @@ import datetime
 import threading
 
 import pika
-import servicemanager
 
 from my_utils.sensing_utils import measureMS2760A, measureMS2090A, interp_af, iq_measureMS2090A
 from my_utils.mq_utils import callbackTransferData, startTransferData
