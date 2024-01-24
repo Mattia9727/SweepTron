@@ -42,7 +42,8 @@ def callback_transfer_iq_data(ch, method, properties, body):
     ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body="IQ_"+msg)
-    os.remove(c.compressed_iq_log_file)
+    if msg == "OK":
+        os.remove(c.compressed_iq_log_file)
 
 
 def callback_transfer_normal_data(ch, method, properties, body):
@@ -60,7 +61,8 @@ def callback_transfer_normal_data(ch, method, properties, body):
     ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body="normal_"+msg)
-    os.remove(last_transfer_data)
+    if msg == "OK":
+        os.remove(last_transfer_data)
 
 
 if __name__ == "__main__":
