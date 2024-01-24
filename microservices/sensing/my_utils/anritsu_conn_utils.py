@@ -2,7 +2,9 @@ import datetime
 import os
 import socket
 
-from . import constants as c
+import servicemanager
+
+from data import constants as c
 
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
@@ -36,7 +38,6 @@ def connect_to_device():
     try:
         # Connessione al dispositivo
         client_socket.connect((TCP_IP, TCP_PORT))
-
 
     except Exception as e:
         print("Errore durante la comunicazione con il dispositivo:", str(e))
@@ -138,3 +139,39 @@ def setup_for_single_freq(conn,f):
     samples_for_averages_str = ':SENS:AVER:COUN {}\n'.format(c.samples_for_averages)
     send_command(conn, samples_for_averages_str)  # Rolling average number of samples
     send_command(conn, ':TRAC:TYPE RAV\n', c.command_rolling_average_time)  # Rolling average DETECTOR
+
+
+def get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp):
+    #TODO: Capire con il prof se va fatto qualcosa qui (uso API per trovare nome da info lat-long, oppure nome statico)
+    return "Roma Tor Vergata"
+
+
+def get_gps_info(conn):
+
+    # PARTE GPS, DA VEDERE
+    location_name = "_"
+
+    gps_raw = get_message(conn, ':FETCh:GPS?\n')  # Fetching the GPS TODO: Ultraportable non ha GPS! Come fare?
+    if gps_raw != None:
+        gps_array_split = gps_raw.split(',')
+
+        if gps_array_split[0] == 'GOOD FIX':
+            curr_latitude = float(gps_array_split[2])
+            curr_longitude = float(gps_array_split[3])
+            curr_timestamp = gps_array_split[1]
+
+            location_name = get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp)
+
+    return location_name
+
+def general_setup_connection_to_device():
+    find_device()
+    conn = connect_to_device()
+    location_name = ""
+    if c.device_type == "MS2090A":
+        location_name = get_gps_info(conn)
+        setup_anritsu_device_MS2090A(conn)
+    elif c.device_type == "MS2760A":
+        setup_anritsu_device_MS2760A(conn)
+
+    return conn, location_name

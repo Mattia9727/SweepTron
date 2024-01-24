@@ -1,14 +1,14 @@
 import datetime
 import os
-import time
 from math import sqrt
 
 import numpy as np
+import servicemanager
 from matplotlib import pyplot as plt
 
-from . import constants as c
+from data import constants as c
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
-    setup_for_single_freq
+    setup_for_single_freq, general_setup_connection_to_device
 
 import time
 
@@ -49,7 +49,7 @@ def calculate_vm_from_dbm(dbm,af):
 
 def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks):
     max_marker = -200
-    min_marker = 200
+
     for i in range(time_search_max):
         time.sleep(1)
         send_command(conn,':CALC:MARKer1:MAXimum\n')  # put marker on maximum
@@ -59,22 +59,17 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks):
         if curr_max_marker > max_marker:
             max_marker = curr_max_marker
 
-    for i in range(time_search_max):
-        time.sleep(1)
-        send_command(conn,':CALC:MARKer1:MINimum\n')  # put marker on minimum #TODO: NON ESISTE! DEVO VEDERE COME FARE
-        output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
-        curr_min_marker = float(output_string)
-
-        if curr_min_marker < min_marker:
-            min_marker = curr_min_marker
+    min_marker = -80   # TODO: capire come trovarlo dinamicamente  (val = valoredinamico - 20 (Db))
 
     reference_level = int(max_marker) + curr_margin
 
+
     str_level = ':DISP:WIND:TRAC:Y:SCAL:RLEV {}\n'.format(reference_level)
     send_command(conn,str_level)  # setting reference level
-    time.sleep(1)
 
     scale_div = abs(reference_level - min_marker) / y_ticks
+    if c.print_debug == 1:
+        print(str(scale_div))
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(scale_div)
     send_command(conn,str_scale_div)  # automatic scale div setting
 
@@ -99,24 +94,55 @@ def plot_measure(measured_emf_matrix_base_station,f):
     plt.savefig(os.path.join(c.grafici_dir, plot_file))
     plt.clf()
 
-def iq_capture():
-    # Crea un socket
-    conn = connect_to_device()
-    print(get_message(conn, '*IDN?\n'))
-    send_command(conn, ':IQ:SAMPle SB2\n')
-    print(get_error(conn))
-    send_command(conn, ':IQ:BITS I16\n')
-    print(get_error(conn))
-    send_command(conn, ':IQ:MODE SINGLE\n')
-    print(get_error(conn))
-    send_command(conn, ':SENS:IQ:TIME 1\n')
-    print(get_error(conn))
-    send_command(conn, ':IQ:LENGTH 5 ms\n')
-    print(get_error(conn))
-    send_command(conn, ':MEAS:IQ:CAPT\n')
-    print(get_error(conn))
-    print(get_message(conn,':STATus:OPERation?\n'))
-    conn.close()
+def iq_measureMS2090A(conn, location_name):
+    print(get_message(conn, "*IDN?"))
+    # Set Frequency
+    for f in range(c.iq_num_frequencies):
+        send_command(conn, ":SENS:FREQ:START {} MHz;",c.iq_frequency_start[f])
+        send_command(conn, ":SENS:FREQ:STOP {} MHz;",c.iq_frequency_stop[f])
+        bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
+
+        print(get_message(conn, ":SYST:ERR?"))
+
+        # Set sweep mode
+        send_command(conn, "SWEEP:MODE FFT;")
+
+        # Set RBW
+        send_command(conn, ":SENS:BWID:RES {} MHz;", bandwidth)
+
+        # Set Reference Level to -30 dBm
+        send_command(conn, ":DISP:WIND:TRAC:Y:SCAL:RLEV -70;")
+
+        # Set to single sweep
+        send_command(conn, ":INIT:CONT ON;")
+
+        # Set number of display points to calculate frequency array
+        # write("DISP:POIN 601;")
+
+        # Get number of display points to calculate frequency array
+        # print(spa.query(":DISP:POIN?;"))
+
+        send_command(conn, ":SENS:AVER:TYPE NORM")
+
+        # Prepare per IQ Capture
+        send_command(conn, "IQ:BAND 267000 HZ")
+        send_command(conn, ":IQ:LENG 200 ms")
+        send_command(conn, ":IQ:BITS 16")
+        send_command(conn, ":IQ:MODE SING")
+        send_command(conn, ":IQ:TIME OFF")
+        # send_command(conn, (":TRACe:IQ:DATA:FORM PACK")
+        send_command(conn, ":TRACe:IQ:DATA:FORM ASC")
+        send_command(conn, ":INIT:CONT ON;")
+        print("Start Capture....\n")
+        send_command(conn, "MEAS:IQ:CAPT")
+        data = get_message(conn, ":STAT:OPER?")
+        print("Sweep Status:  " + data)
+
+        dati = get_message(conn, "TRAC:IQ:DATA?")
+        print(dati)
+        log_file = open(c.log_iq_file, 'a')
+        log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+                                           dati))
 
 
 def measureMS2090A(conn, location_name):
@@ -139,10 +165,9 @@ def measureMS2090A(conn, location_name):
 
     for f in range(c.num_frequencies):
 
-
-
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
+        servicemanager.LogInfoMsg("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
 
         c.transmission_freq_used = False
         if c.frequency_center[f] in c.transmission_freq:  # Controllo di frequenza di invio
@@ -154,6 +179,9 @@ def measureMS2090A(conn, location_name):
                 continue
 
         setup_for_single_freq(conn, f)
+
+        for i in range(c.time_search_for_adjust_ref_level_scale):
+            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks)
 
         for i in range(c.number_samples_chp):
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  # Fetch current value of channel power
@@ -192,7 +220,7 @@ def measureMS2760A(conn, location_name):
         os.makedirs(c.logs_dir)
 
     # Create and open a TXT file to record data
-    log_file = open(c.log_file, 'a')
+
 
     # # Create and open a CSV file to record data
     # csv_file = open(os.path.join(c.log_file + '.csv'), 'a')
@@ -200,13 +228,12 @@ def measureMS2760A(conn, location_name):
     curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
     if c.print_debug > 0:
+        log_file = open(c.log_file, 'a')
         log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
+        log_file.close()
 
     for f in range(c.num_frequencies):
-
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
-        adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], 3, c.y_ticks)
+        log_file = open(c.log_file, 'a')
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
@@ -215,23 +242,28 @@ def measureMS2760A(conn, location_name):
         if c.frequency_center[f] in c.transmission_freq:  # Controllo di frequenza di invio
             c.transmission_freq_used = True
 
-        if c.iq_mode == 1:
-            if c.transmission_freq_used == True and c.isTransfering == True:
-                print("Invio dati in IQ_MODE nella frequenza attuale. Passo alla frequenza successiva.")
-                continue
+        if c.iq_mode == 1 and c.transmission_freq_used == True and c.isTransfering == True:
+            print("Invio dati in IQ_MODE nella frequenza attuale. Passo alla frequenza successiva.")
+            continue
 
         setup_for_single_freq(conn, f)
 
+        for i in range(c.time_search_for_adjust_ref_level_scale):
+            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks)
+
+
         for i in range(c.number_samples_chp):
+
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  # Fetch current value of channel power
-            if emf_measured_chp == "" :
-                print("Problema valore nullo")
+            if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
+                print("Problema valore CHP, reset connessione e riprovo misurazione...")
+                conn.close()
+                conn, _ = general_setup_connection_to_device()
+                i-=1
                 continue
             emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.antenna_factor[f])
             measured_emf_matrix_base_station[f, i] = float(emf_measured_vm)
             time_array[f, i] = datetime.datetime.now()
-            if (len(emf_measured_chp.split("\n"))>2):
-                print("C'è un problema con il valore restituito nella misurazione")
 
             if c.print_debug > 0:
                 print('{} - {} - {}'.format(
@@ -255,35 +287,10 @@ def measureMS2760A(conn, location_name):
         location_name_mat = '{}.mat'.format(location_name)
         np.save(location_name_mat, measured_emf_matrix_base_station)
         c.transmission_freq_used = False
+        log_file.close()
 
     # Close the log files
-    log_file.close()
+
     # csv_file.close()
     # Add code to stop the loop or exit gracefully if needed
 
-def get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp):
-    #TODO: Capire con il prof se va fatto qualcosa qui (uso API per trovare nome da info lat-long, oppure nome statico)
-    return "Roma Tor Vergata"
-
-
-def get_gps_info(conn):
-
-    # PARTE GPS, DA VEDERE
-    location_name = "Roma Tor Vergata"
-
-    gps_raw = get_message(conn, ':FETCh:GPS?\n')  # Fetching the GPS TODO: Ultraportable non ha GPS! Come fare?
-    if gps_raw != None:
-        gps_array_split = gps_raw.split(',')
-
-        curr_latitude = 0
-        curr_longitude = 0
-        curr_timestamp = 0
-
-        if gps_array_split[0] == 'GOOD FIX':
-            curr_latitude = float(gps_array_split[2])
-            curr_longitude = float(gps_array_split[3])
-            curr_timestamp = gps_array_split[1]
-
-            location_name = get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp)
-
-    return location_name

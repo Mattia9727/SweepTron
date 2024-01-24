@@ -2,20 +2,20 @@ import time
 
 import pika
 import lzma
-import constants as c
+from data import constants as c
 
 
 def compress_iq_lzma(body):
-    with open(c.log_file + ".dgz", "rb") as f:
+    with open(body, "rb") as f:
         data = f.read()
 
-    with lzma.open("../../data/compressed_data_{}.txt".format(body), "w") as f:
+    with lzma.open(body+"_compressed", "w") as f:
         f.write(data)
 
 
 def callback_processing_data(ch, method, properties, body):
+    print("Callback processing attivato")
     compress_iq_lzma(body)
-
     ch.basic_publish(exchange='',
                      routing_key='P-T',
                      body=body)
@@ -29,10 +29,12 @@ def start_processing_data():
 
     channel.basic_consume(queue='S-P', on_message_callback=callback_processing_data, auto_ack=True)
 
-    channel.start_consuming()
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        print(' [x] Consumatore interrotto.')
 
 
 if __name__ == "__main__":
     print("Processing microservice ON")
-    time.sleep(60)
     start_processing_data()

@@ -1,28 +1,24 @@
 import datetime
-import time
+import threading
 
 import pika
+import servicemanager
 
-from my_utils.sensing_utils import get_gps_info, measureMS2760A, measureMS2090A, interp_af
+from my_utils.sensing_utils import measureMS2760A, measureMS2090A, interp_af, iq_measureMS2090A
 from my_utils.mq_utils import callbackTransferData, startTransferData
 from my_utils.anritsu_conn_utils import connect_to_device, find_device, \
-    setup_anritsu_device_MS2090A, setup_anritsu_device_MS2760A
+    setup_anritsu_device_MS2090A, setup_anritsu_device_MS2760A, general_setup_connection_to_device
 
-from my_utils import constants as c
+from data import constants as c
 
 
 def sensing(ch):
     # Crea un socket
-    find_device()
-    conn = connect_to_device()
-    location_name = ""
-    if c.device_type == "MS2090A":
-        #location_name = get_gps_info(conn)
-        setup_anritsu_device_MS2090A(conn)
-    elif c.device_type == "MS2760A":
-        setup_anritsu_device_MS2760A(conn)
+    # find_device()
+    conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)
 
+    today = -1
     # Monitoring of all DL frequencies
     while True:  # You might want to replace 'True' with a condition to stop the loop
         condition = 4 <= datetime.datetime.now().hour <= 7
@@ -30,16 +26,45 @@ def sensing(ch):
             if c.transferedToday == 0:
                 startTransferData(ch)
             c.transferedToday = 1
+            today = datetime.datetime.today().day
         else:
-            c.transferedToday = 0
+            if today != datetime.datetime.today().day:
+                c.transferedToday = 0
+
 
         if c.device_type == "MS2760A":
             measureMS2760A(conn, location_name)
         elif c.device_type == "MS2090A":
-            measureMS2090A(conn, location_name)
+            if c.iq_mode == 0:
+                measureMS2090A(conn, location_name)
+            else:
+                iq_measureMS2090A(conn, location_name)
 
 
-if __name__ == "__main__":
+def consume_thread():
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    channel = connection.channel()
+
+    channel.queue_declare(queue='T-S')
+
+    channel.basic_consume(queue='T-S',
+                          auto_ack=True,
+                          on_message_callback=callbackTransferData)
+
+    print("Inizio consume")
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        print(' [x] Consumatore interrotto.')
+
+
+def start_consuming_thread():
+    # Crea un thread e avvia la funzione consume()
+    thread = threading.Thread(target=consume_thread)
+    thread.start()
+
+
+def main():
     print("Sensing microservice ON")
     #time.sleep(60)
 
@@ -48,10 +73,10 @@ if __name__ == "__main__":
 
     channel.queue_declare(queue='S-P')
     channel.queue_declare(queue='S-T')
-    channel.queue_declare(queue='T-S')
 
-    channel.basic_consume(queue='T-S',
-                          auto_ack=True,
-                          on_message_callback=callbackTransferData)
+    start_consuming_thread()
 
     sensing(channel)
+
+if __name__ == "__main__":
+    main()

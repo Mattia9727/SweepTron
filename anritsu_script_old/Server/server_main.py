@@ -1,52 +1,34 @@
+from flask import Flask, request, jsonify
 import os
-import socket
-import time
 
-import constants as c
+app = Flask(__name__)
 
-IP = socket.gethostbyname(socket.gethostname())
-PORT = 4455
-ADDR = (IP, PORT)
-SIZE = 1024
-FORMAT = "utf-8"
+UPLOAD_FOLDER = os.path.join(os.path.expanduser("~"), "Desktop", "SweeptronServer")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-def main():
-    if not os.path.exists(c.logs_dir):
-        # Create a new directory
-        os.makedirs(c.logs_dir)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-    print("[STARTING] Server is starting.")
-    """ Staring a TCP socket. """
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    """ Bind the IP and PORT to the server. """
-    server.bind(ADDR)
-    """ Server is listening, i.e., server is now waiting for the client to connected. """
-    server.listen()
-    print("[LISTENING] Server is listening.")
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
 
 
-    while True:
-        """ Server has accepted the connection from the client. """
-        conn, addr = server.accept()
-        print(f"[NEW CONNECTION] {addr} connected.")
-        """ Receiving the filename from the client. """
-        filename = conn.recv(SIZE).decode(FORMAT)
-        print(filename)
-        print(f"[RECV] Receiving the filename.")
-        file = open(filename, "a")
-        time.sleep(0.5)
-        conn.send("Filename received.".encode(FORMAT))
-        """ Receiving the file data from the client. """
-        data = conn.recv(SIZE).decode(FORMAT)
-        time.sleep(2)
-        print(f"[RECV] Receiving the file data.")
-        file.write(data)
-        conn.send("File data received".encode(FORMAT))
-        """ Closing the file. """
-        file.close()
-        """ Closing the connection from the client. """
-        conn.close()
-        print(f"[DISCONNECTED] {addr} disconnected.")
 
-if __name__ == "__main__":
-    main()
+        # Salva il file nella cartella specificata
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+
+        return jsonify({"success": "File uploaded successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
