@@ -3,7 +3,7 @@ import socket
 import time
 import pika
 import requests
-from data import constants as c
+from my_utils import constants as c
 
 
 def check_server_reachability():
@@ -21,9 +21,7 @@ def send_data(file_path):
     with open(file_path, "rb") as file:
         files = {'file': (file_path, file)}
         try:
-            print(c.url)
             response = requests.post(c.url, files=files)
-            print(response.text)
             return("OK")
         except requests.exceptions.ConnectionError:
             print("Server non trovato. Verificare che il server sia acceso per il trasferimento.")
@@ -36,20 +34,22 @@ def callback_transfer_iq_data(ch, method, properties, body):
     print("Callback transfer iq attivato")
 
     if (check_server_reachability == False):
+        print("Server irraggiungibile... provare più tardi")
         return
-
-    msg = send_data(c.compressed_iq_log_file)
+    
+    msg = send_data(body.decode())
     ch.basic_publish(exchange='',
                      routing_key='T-S',
-                     body="IQ_"+msg)
+                     body=("IQ_"+msg).encode("utf-8"))
     if msg == "OK":
-        os.remove(c.compressed_iq_log_file)
+        os.remove(body)
 
 
 def callback_transfer_normal_data(ch, method, properties, body):
     print("Callback transfer normal attivato")
 
     if (check_server_reachability == False):
+        print("Server irraggiungibile... provare più tardi")
         return
 
     last_transfer_data=""
@@ -60,7 +60,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
         msg = send_data(last_transfer_data)
     ch.basic_publish(exchange='',
                      routing_key='T-S',
-                     body="normal_"+msg)
+                     body=("normal_"+msg).encode("utf-8"))
     if msg == "OK":
         os.remove(last_transfer_data)
 

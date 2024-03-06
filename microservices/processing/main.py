@@ -1,24 +1,27 @@
 import time
-
+import os
 import pika
 import lzma
-from data import constants as c
+import constants as c
 
 
 def compress_iq_lzma(body):
     with open(body, "rb") as f:
         data = f.read()
-
-    with lzma.open(body+"_compressed", "w") as f:
+    print(body)
+    body2 = body.decode().replace(c.iq_measures_dir,c.processed_iq_measures_dir)
+    with lzma.open(body2, "w") as f:
         f.write(data)
+    os.remove(body.decode())
+    return body2
 
 
 def callback_processing_data(ch, method, properties, body):
     print("Callback processing attivato")
-    compress_iq_lzma(body)
+    body2 = compress_iq_lzma(body)
     ch.basic_publish(exchange='',
                      routing_key='P-T',
-                     body=body)
+                     body=body2.encode("utf-8"))
 
 
 def start_processing_data():

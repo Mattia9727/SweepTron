@@ -1,6 +1,8 @@
 import datetime
 import threading
 
+import os, json
+
 import pika
 
 from my_utils.sensing_utils import measureMS2760A, measureMS2090A, interp_af, iq_measureMS2090A
@@ -8,7 +10,7 @@ from my_utils.mq_utils import callbackTransferData, startTransferData
 from my_utils.anritsu_conn_utils import connect_to_device, find_device, \
     setup_anritsu_device_MS2090A, setup_anritsu_device_MS2760A, general_setup_connection_to_device
 
-from data import constants as c
+from my_utils import constants as c
 
 
 def sensing(ch):
@@ -34,6 +36,11 @@ def sensing(ch):
         if c.device_type == "MS2760A":
             measureMS2760A(conn, location_name)
         elif c.device_type == "MS2090A":
+            data_folder = os.path.join(os.environ['USERPROFILE'], 'Desktop','SweeptronData')
+            settings_path = os.path.join(data_folder,'config.json')
+            with open(settings_path) as f:
+                constants = json.load(f)
+            c.iq_mode = constants["iq_mode"]
             if c.iq_mode == 0:
                 measureMS2090A(conn, location_name)
             else:

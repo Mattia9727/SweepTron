@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
 
-import servicemanager
-
-from data import constants as c
+from . import constants as c
 
 def callbackTransferData(channel, method, properties, body):
     msg = body.decode()
@@ -35,14 +33,18 @@ def sendIQCapture(ch):
     iq_normal_files = os.listdir(c.iq_measures_dir)
     if len(iq_normal_files) > 0:
         for file_name in iq_normal_files:
+            print(file_name)
+        
             file_path = os.path.join(c.iq_measures_dir, file_name)
+            file_path_for_name = file_path.rsplit(".",1)[0]
+            print(file_path)
             d = datetime.now()
-            new_name = file_path + "_" + str(d.date()) + "_{}{}{}.dgz".format(d.day, d.month, d.year)
-            os.rename(c.log_iq_file, new_name)
+            new_name = file_path_for_name + "_" + str(d.date()) + "_{}{}{}_{}{}{}.txt".format(d.day, d.month, d.year,d.hour,d.minute,d.second)
+            os.rename(file_path, new_name)
             # Invia il messaggio alla coda
             ch.basic_publish(exchange='',
                              routing_key='S-P',
-                             body=new_name)
+                             body=new_name.encode("utf-8"))
 
 def sendNormalCapture(ch):
     print("[Invio a Transfer] Invio cattura normale al transfer per invio.")
@@ -54,7 +56,7 @@ def sendNormalCapture(ch):
     #                      body="old")
     # else:
     d = datetime.now()
-    new_name = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}.dgz".format(d.day,d.month,d.year)
+    new_name = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
     try:
         os.rename(c.log_file, new_name)
     except FileExistsError:

@@ -1,12 +1,14 @@
 import datetime
 import os
+
 from math import sqrt
 
 import numpy as np
-import servicemanager
 from matplotlib import pyplot as plt
 
-from data import constants as c
+
+from . import constants as c
+
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
     setup_for_single_freq, general_setup_connection_to_device
 
@@ -95,26 +97,27 @@ def plot_measure(measured_emf_matrix_base_station,f):
     plt.clf()
 
 def iq_measureMS2090A(conn, location_name):
-    print(get_message(conn, "*IDN?"))
+    #print(get_message(conn, "*IDN?\n"))
     # Set Frequency
+    wait_secs = 20
     for f in range(c.iq_num_frequencies):
-        send_command(conn, ":SENS:FREQ:START {} MHz;",c.iq_frequency_start[f])
-        send_command(conn, ":SENS:FREQ:STOP {} MHz;",c.iq_frequency_stop[f])
+        send_command(conn, ":SENS:FREQ:START {} MHz;\n".format(c.iq_frequency_start[f]),wait_secs)
+        send_command(conn, ":SENS:FREQ:STOP {} MHz;\n".format(c.iq_frequency_stop[f]),wait_secs)
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
 
-        print(get_message(conn, ":SYST:ERR?"))
+        #print(get_message(conn, ":SYST:ERR?\n"))
 
         # Set sweep mode
-        send_command(conn, "SWEEP:MODE FFT;")
+        send_command(conn, "SWEEP:MODE FFT;\n",wait_secs)
 
         # Set RBW
-        send_command(conn, ":SENS:BWID:RES {} MHz;", bandwidth)
+        send_command(conn, ":SENS:BWID:RES {} MHz;\n".format(bandwidth),wait_secs)
 
         # Set Reference Level to -30 dBm
-        send_command(conn, ":DISP:WIND:TRAC:Y:SCAL:RLEV -70;")
+        send_command(conn, ":DISP:WIND:TRAC:Y:SCAL:RLEV -70;\n",wait_secs)
 
         # Set to single sweep
-        send_command(conn, ":INIT:CONT ON;")
+        send_command(conn, ":INIT:CONT ON;\n",wait_secs)
 
         # Set number of display points to calculate frequency array
         # write("DISP:POIN 601;")
@@ -122,27 +125,28 @@ def iq_measureMS2090A(conn, location_name):
         # Get number of display points to calculate frequency array
         # print(spa.query(":DISP:POIN?;"))
 
-        send_command(conn, ":SENS:AVER:TYPE NORM")
+        send_command(conn, ":SENS:AVER:TYPE NORM\n",wait_secs)
 
         # Prepare per IQ Capture
-        send_command(conn, "IQ:SAMP SB19")
-        send_command(conn, ":IQ:LENG 1 s")
-        send_command(conn, ":IQ:BITS 16")
-        send_command(conn, ":IQ:MODE SING")
-        send_command(conn, ":IQ:TIME OFF")
+        send_command(conn, "IQ:SAMP SB19\n",wait_secs)
+        send_command(conn, ":IQ:LENG 1 s\n",wait_secs)
+        send_command(conn, ":IQ:BITS 16\n",wait_secs)
+        send_command(conn, ":IQ:MODE SING\n",wait_secs)
+        send_command(conn, ":IQ:TIME OFF\n",wait_secs)
         # send_command(conn, (":TRACe:IQ:DATA:FORM PACK")
-        send_command(conn, ":TRACe:IQ:DATA:FORM ASC")
-        send_command(conn, ":INIT:CONT ON;")
+        send_command(conn, ":TRACe:IQ:DATA:FORM ASC\n",wait_secs)
+        send_command(conn, ":INIT:CONT ON;\n",wait_secs)
         print("Start Capture....\n")
-        send_command(conn, "MEAS:IQ:CAPT")
-        data = get_message(conn, ":STAT:OPER?")
-        print("Sweep Status:  " + data)
+        send_command(conn, "MEAS:IQ:CAPT\n",wait_secs)
+        data = get_message(conn, ":STAT:OPER?\n",wait_secs)
+        #print("Sweep Status:  " + data)
 
-        dati = get_message(conn, "TRAC:IQ:DATA?")
-        print(dati)
+        dati = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
+        #print(dati)
         log_file = open(c.log_iq_file, 'a')
         log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
                                            dati))
+        time.sleep(.5)
 
 
 def measureMS2090A(conn, location_name):
@@ -167,7 +171,7 @@ def measureMS2090A(conn, location_name):
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
-        servicemanager.LogInfoMsg("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
+        #servicemanager.LogInfoMsg("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
 
         c.transmission_freq_used = False
         if c.frequency_center[f] in c.transmission_freq:  # Controllo di frequenza di invio

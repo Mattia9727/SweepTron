@@ -2,16 +2,15 @@ import datetime
 import os
 import socket
 
-import servicemanager
-
-from data import constants as c
+from . import constants as c
 
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
+TCP_IP = '10.0.0.2'
 # TCP_IP = '192.168.214.70'
-TCP_IP = 'localhost'
-# TCP_PORT = 9001
-TCP_PORT = 59001
+# TCP_IP = 'localhost'          #Per ultraportable
+TCP_PORT = 9001
+# TCP_PORT = 59001              #Per ultraportable
 BUFFER_SIZE = 8192
 TIMEOUT = 3  # amount of time in s between one command and the following time
 
@@ -76,7 +75,11 @@ def get_message(conn, message, wait=-1):
     if wait != -1:
         conn.settimeout(TIMEOUT)
     if isinstance(recv_message, bytes):
-        return recv_message.decode()
+        try:
+            a = recv_message.decode()
+            return a
+        except UnicodeDecodeError:
+            return str(recv_message)
     return recv_message
 
 
