@@ -49,7 +49,7 @@ def interp_af(freqs):
 def calculate_vm_from_dbm(dbm,af):
     return (1/sqrt(20))*10**((float(dbm)+float(af))/20)
 
-def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks):
+def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker):
     max_marker = -200
 
     for i in range(time_search_max):
@@ -61,7 +61,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks):
         if curr_max_marker > max_marker:
             max_marker = curr_max_marker
 
-    min_marker = -80   # TODO: capire come trovarlo dinamicamente  (val = valoredinamico - 20 (Db))
+    #min_marker = -85   # TODO: capire come trovarlo dinamicamente  (val = valoredinamico - 20 (Db))
 
     reference_level = int(max_marker) + curr_margin
 
@@ -146,7 +146,12 @@ def iq_measureMS2090A(conn, location_name):
         log_file = open(c.log_iq_file, 'a')
         log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
                                            dati))
-        time.sleep(.5)
+        time.sleep(10)
+
+def dbmm2_to_vm(value):
+    value_in_dbmuvm = value + 115.8
+    value_in_vm = 10**((value_in_dbmuvm-120)/20)
+    return value_in_vm
 
 
 def measureMS2090A(conn, location_name):
@@ -185,20 +190,21 @@ def measureMS2090A(conn, location_name):
         setup_for_single_freq(conn, f)
 
         for i in range(c.time_search_for_adjust_ref_level_scale):
-            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks)
+            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks, c.minimum_level_no_pre_amp[f])
 
         for i in range(c.number_samples_chp):
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  # Fetch current value of channel power
             measured_emf_matrix_base_station[f, i] = float(emf_measured_chp)
             time_array[f, i] = datetime.datetime.now()
+            emf_in_vm = dbmm2_to_vm(measured_emf_matrix_base_station[f, i])
 
             if c.print_debug > 0:
-                log_file.write('Timestamp: {} - Frequency: {} - Channel power: {}\n'.format(
+                log_file.write('Timestamp: {} - Frequency: {} - Channel power in DBm/m2: {} - Channel power in V/m: {}\n'.format(
                     datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
-                    measured_emf_matrix_base_station[f, i]))
+                    measured_emf_matrix_base_station[f, i], emf_in_vm))
             else:
-                log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
-                                                   measured_emf_matrix_base_station[f, i]))
+                log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+                                                   measured_emf_matrix_base_station[f, i], emf_in_vm))
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))

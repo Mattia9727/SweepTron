@@ -116,7 +116,7 @@ def setup_anritsu_device_MS2090A(conn):
     send_command(conn,':CONFigure:CHPower\n')
     send_command(conn,':FSTRength:STATe 1\n')
     send_command(conn,':FSTRength:ANTenna "{}"\n'.format(c.antenna_file))
-    send_command(conn,':UNIT:POW V/M\n')  # Unit in terms of field strength (volt meter). IMPORTANT: DOUBLE CHECK THAT THE ANTENNA FILE ON THE SA IS CORRECT!
+    send_command(conn,':UNIT:POW DBM/M2\n')  # Unit in terms of field strength (volt meter). IMPORTANT: DOUBLE CHECK THAT THE ANTENNA FILE ON THE SA IS CORRECT!
     send_command(conn,':POW:RF:ATT:AUTO OFF\n')  # Automatic input attenuation coupling
     send_command(conn,':POW:RF:ATT 0 DB\n')  # Set attenuation to 0 dB
     send_command(conn,':POW:RF:GAIN:STAT OFF\n')  # Turn off pre-amplifier for initial setting
