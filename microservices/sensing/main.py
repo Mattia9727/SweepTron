@@ -2,6 +2,7 @@ import datetime
 import threading
 
 import os, json
+import time
 
 import pika
 
@@ -16,8 +17,8 @@ from my_utils import constants as c
 def sensing(ch):
     # Crea un socket
     # find_device()
-    conn,location_name = general_setup_connection_to_device()
-    c.antenna_factor = interp_af(c.frequency_center)
+    # conn,location_name = general_setup_connection_to_device()
+    # c.antenna_factor = interp_af(c.frequency_center)
 
     today = -1
     # Monitoring of all DL frequencies
@@ -32,19 +33,19 @@ def sensing(ch):
             if today != datetime.datetime.today().day:
                 c.transferedToday = 0
 
-
-        if c.device_type == "MS2760A":
-            measureMS2760A(conn, location_name)
-        elif c.device_type == "MS2090A":
-            data_folder = os.path.join(os.environ['USERPROFILE'], 'Desktop','SweeptronData')
-            settings_path = os.path.join(data_folder,'config.json')
-            with open(settings_path) as f:
-                constants = json.load(f)
-            c.iq_mode = constants["iq_mode"]
-            if c.iq_mode == 0:
-                measureMS2090A(conn, location_name)
-            else:
-                iq_measureMS2090A(conn, location_name)
+        time.sleep(100)
+        # if c.device_type == "MS2760A":
+        #     measureMS2760A(conn, location_name)
+        # elif c.device_type == "MS2090A":
+        #     data_folder = os.path.join(os.environ['USERPROFILE'], 'Desktop','SweeptronData')
+        #     settings_path = os.path.join(data_folder,'config.json')
+        #     with open(settings_path) as f:
+        #         constants = json.load(f)
+        #     c.iq_mode = constants["iq_mode"]
+        #     if c.iq_mode == 0:
+        #         measureMS2090A(conn, location_name)
+        #     else:
+        #         iq_measureMS2090A(conn, location_name)
 
 
 def consume_thread():

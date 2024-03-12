@@ -7,8 +7,8 @@ from my_utils import constants as c
 
 
 def check_server_reachability():
+    ip_port = c.server_ip.split(":")
     try:
-        ip_port = c.server_ip.split(":")
         socket.create_connection((ip_port[0], ip_port[1]), timeout=5)
         print(f"Server {ip_port[0],}:{ip_port[1]} is reachable.")
         return True
@@ -26,6 +26,26 @@ def send_data(file_path):
         except requests.exceptions.ConnectionError:
             print("Server non trovato. Verificare che il server sia acceso per il trasferimento.")
             return("errore")
+
+
+def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
+    json_data = {
+        "location": c.location,  # Sostituisci con il tuo luogo
+        "timestamp": timestamp,
+        "freq": freq,
+        "dbmm2value": dbmm2value,
+        "vmvalue": vmvalue
+    }
+
+    # Invia la richiesta POST al server Flask
+    response = requests.post(c.url, json=json_data)
+
+    # Verifica lo stato della risposta
+    if response.status_code == 200:
+        print("Dati inviati correttamente al server.")
+    else:
+        print("Errore durante l'invio dei dati al server.")
+    return str(response.status_code)
 
 
 
@@ -52,17 +72,39 @@ def callback_transfer_normal_data(ch, method, properties, body):
         print("Server irraggiungibile... provare più tardi")
         return
 
-    last_transfer_data=""
-    msg = "errore"
-    if body!="old":
-        last_transfer_data = body
-    if last_transfer_data !="":
-        msg = send_data(last_transfer_data)
+    with open(body, 'r') as file:
+        lines = file.readlines()
+    # with open(body, 'w') as file:
+        for line in lines:
+            # Dividi la riga in timestamp, freq, dbmm2, vmvalue
+            parts = line.split()
+            if len(parts) == 4:
+                timestamp, freq, dbmm2, vmvalue = parts
+
+                # Invia i dati al server Flask
+                ok = False
+                time.sleep(1)
+                for i in range(5):
+                    if(send_data_to_server(timestamp, float(freq), float(dbmm2), float(vmvalue)) == "200"):
+                        ok=True
+                        break
+                # if(not ok):
+                #     file.write(line)
+    if ok:
+        os.remove(body)
+
+    # last_transfer_data=""
+    # msg = "errore"
+    # if body!="old":
+    #     last_transfer_data = body
+    # if last_transfer_data !="":
+    #     msg = send_data(last_transfer_data)
+
     ch.basic_publish(exchange='',
                      routing_key='T-S',
-                     body=("normal_"+msg).encode("utf-8"))
-    if msg == "OK":
-        os.remove(last_transfer_data)
+                     body=("normal_OK").encode("utf-8"))
+    # if msg == "OK":
+    #     os.remove(last_transfer_data)
 
 
 if __name__ == "__main__":
