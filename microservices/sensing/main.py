@@ -18,14 +18,15 @@ import constants as c
 
 def sensing(ch):
     # Crea un socket
-    find_device()
+    # find_device()
     conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)
 
     today = -1
     # Monitoring of all DL frequencies
     while True:  # You might want to replace 'True' with a condition to stop the loop
-        condition = 4 <= datetime.datetime.now().hour <= 7
+        #condition = 4 <= datetime.datetime.now().hour <= 7
+        condition = False  #TODO: provvisorio, da capire perché fallisce comunicazione con coda se passa troppo tempo
         if condition or c.debug_transfer:
             if c.transferedToday == 0:
                 startTransferData(ch)

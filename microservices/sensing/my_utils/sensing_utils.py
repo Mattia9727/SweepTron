@@ -52,8 +52,9 @@ def interp_af(freqs):
 def calculate_vm_from_dbm(dbm,af):
     return (1/sqrt(20))*10**((float(dbm)+float(af))/20)
 
-def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker):
+def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker,freq_start):
     max_marker = -200
+    calc_min_marker = 200
 
     for i in range(time_search_max):
         time.sleep(1)
@@ -61,18 +62,30 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
         output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
         curr_max_marker = float(output_string)
 
+
+        send_command(conn,':CALC:MARKer2:X {} MHZ\n'.format(freq_start))  # put marker on start (high probability that it's minimum)
+        output_string = get_message(conn,':CALC:MARKer2:Y?\n')  # query marker
+        curr_min_marker = float(output_string)
+
         if curr_max_marker > max_marker:
             max_marker = curr_max_marker
+
+        if curr_min_marker < calc_min_marker:
+            calc_min_marker = curr_min_marker
 
     #min_marker = -85   # TODO: capire come trovarlo dinamicamente  (val = valoredinamico - 20 (Db))
 
     reference_level = int(max_marker) + curr_margin
 
+    calc_min_marker = int(calc_min_marker) - curr_margin
+
+    #print("Actual min margin {} Should be like {}".format(calc_min_marker, min_marker))
 
     str_level = ':DISP:WIND:TRAC:Y:SCAL:RLEV {}\n'.format(reference_level)
     send_command(conn,str_level)  # setting reference level
 
-    scale_div = abs(reference_level - min_marker) / y_ticks
+    #scale_div = abs(reference_level - min_marker) / y_ticks
+    scale_div = abs(reference_level - calc_min_marker) / y_ticks
     if c.print_debug == 1:
         print(str(scale_div))
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(scale_div)
