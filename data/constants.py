@@ -65,3 +65,6 @@ url = constants["url"]
 iq_length_value = constants["iq_length_value"]
 iq_length_unit = constants["iq_length_unit"]
 iq_bits = constants["iq_bits"]
+
+location = constants["location"]
+

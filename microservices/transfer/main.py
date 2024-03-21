@@ -3,7 +3,9 @@ import socket
 import time
 import pika
 import requests
-from my_utils import constants as c
+import sys
+sys.path.append('../../data/')
+import constants as c
 
 
 def check_server_reachability():
@@ -40,11 +42,11 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
     # Invia la richiesta POST al server Flask
     response = requests.post(c.url, json=json_data)
 
-    # Verifica lo stato della risposta
-    if response.status_code == 200:
-        print("Dati inviati correttamente al server.")
-    else:
-        print("Errore durante l'invio dei dati al server.")
+    # # Verifica lo stato della risposta
+    # if response.status_code == 200:
+    #     print("Dati inviati correttamente al server.")
+    # else:
+    #     print("Errore durante l'invio dei dati al server.")
     return str(response.status_code)
 
 
@@ -95,9 +97,9 @@ def callback_transfer_normal_data(ch, method, properties, body):
                     emptyfile = False
     os.remove(body)
     if emptyfile:
-        os.remove("temp_"+body)
+        os.remove(body_strings[0]+"temp."+body_strings[1])
     else:
-        os.rename("temp_"+body,body)
+        os.rename(body_strings[0]+"temp."+body_strings[1],body)
 
     # last_transfer_data=""
     # msg = "errore"
