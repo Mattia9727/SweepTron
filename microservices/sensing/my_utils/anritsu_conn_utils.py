@@ -2,7 +2,9 @@ import datetime
 import os
 import socket
 
-from . import constants as c
+import sys
+sys.path.append('../../data/')
+import constants as c
 
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
@@ -70,14 +72,13 @@ def get_message(conn, message, wait=-1):
 
     except Exception as e:
         print("Errore durante la ricezione dei dati:", str(e))
-        recv_message = get_error(conn)  # Todo: da capire bene cosa fare qui
+        recv_message = get_error(conn)  # TODO: da capire bene cosa fare qui
 
     if wait != -1:
         conn.settimeout(TIMEOUT)
     if isinstance(recv_message, bytes):
         try:
-            a = recv_message.decode()
-            return a
+            return recv_message.decode("utf-8")
         except UnicodeDecodeError:
             return str(recv_message)
     return recv_message

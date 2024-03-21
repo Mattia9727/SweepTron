@@ -71,10 +71,11 @@ def callback_transfer_normal_data(ch, method, properties, body):
     if (check_server_reachability == False):
         print("Server irraggiungibile... provare più tardi")
         return
-
+    
     with open(body, 'r') as file:
         lines = file.readlines()
-    # with open(body, 'w') as file:
+    emptyfile = True
+    with open("temp_"+body, 'w') as file:
         for line in lines:
             # Dividi la riga in timestamp, freq, dbmm2, vmvalue
             parts = line.split()
@@ -83,15 +84,18 @@ def callback_transfer_normal_data(ch, method, properties, body):
 
                 # Invia i dati al server Flask
                 ok = False
-                time.sleep(1)
                 for i in range(5):
                     if(send_data_to_server(timestamp, float(freq), float(dbmm2), float(vmvalue)) == "200"):
                         ok=True
                         break
-                # if(not ok):
-                #     file.write(line)
-    if ok:
-        os.remove(body)
+                if(not ok):
+                    file.write(line)
+                    emptyfile = False
+    os.remove(body)
+    if emptyfile:
+        os.remove("temp_"+body)
+    else:
+        os.rename("temp_"+body,body)
 
     # last_transfer_data=""
     # msg = "errore"

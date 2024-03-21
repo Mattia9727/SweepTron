@@ -6,8 +6,11 @@ from math import sqrt
 import numpy as np
 from matplotlib import pyplot as plt
 
+import sys
+sys.path.append('../../data/')
 
-from . import constants as c
+
+import constants as c
 
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
     setup_for_single_freq, general_setup_connection_to_device
@@ -101,6 +104,7 @@ def iq_measureMS2090A(conn, location_name):
     # Set Frequency
     wait_secs = 20
     for f in range(c.iq_num_frequencies):
+        print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
         send_command(conn, ":SENS:FREQ:START {} MHz;\n".format(c.iq_frequency_start[f]),wait_secs)
         send_command(conn, ":SENS:FREQ:STOP {} MHz;\n".format(c.iq_frequency_stop[f]),wait_secs)
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
@@ -127,26 +131,55 @@ def iq_measureMS2090A(conn, location_name):
 
         send_command(conn, ":SENS:AVER:TYPE NORM\n",wait_secs)
 
+        sb = ""
+        #if (bandwidth == 10): sb = "SB12"
+        #elif (bandwidth == 20): sb = "SB9"
+        #elif (bandwidth == 40): sb = "SB6"
+        #elif (bandwidth == 80): sb = "SB3"
+        #else: sb = "SB19"
+        sb = "SB19"
         # Prepare per IQ Capture
-        send_command(conn, "IQ:SAMP SB19\n",wait_secs)
-        send_command(conn, ":IQ:LENG 1 s\n",wait_secs)
-        send_command(conn, ":IQ:BITS 16\n",wait_secs)
+        send_command(conn, "IQ:SAMP {}\n".format(sb),wait_secs)
+        send_command(conn, ":IQ:LENG {} {}\n".format(c.iq_length_value, c.iq_length_unit),wait_secs)
+        send_command(conn, ":IQ:BITS {}\n".format("c.iq_bits"),wait_secs)
         send_command(conn, ":IQ:MODE SING\n",wait_secs)
         send_command(conn, ":IQ:TIME OFF\n",wait_secs)
-        # send_command(conn, (":TRACe:IQ:DATA:FORM PACK")
-        send_command(conn, ":TRACe:IQ:DATA:FORM ASC\n",wait_secs)
+        send_command(conn, ":TRACe:IQ:DATA:FORM PACK",wait_secs)
+        # send_command(conn, ":TRACe:IQ:DATA:FORM ASC\n",wait_secs)
         send_command(conn, ":INIT:CONT ON;\n",wait_secs)
         print("Start Capture....\n")
         send_command(conn, "MEAS:IQ:CAPT\n",wait_secs)
-        data = get_message(conn, ":STAT:OPER?\n",wait_secs)
-        #print("Sweep Status:  " + data)
+        status = get_message(conn, ":STAT:OPER?\n",wait_secs)
+        print("Sweep Status:  " + status)
 
-        dati = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
+        first_iq_data = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
+        print(len(first_iq_data))
+        total_iq_data = ""
+        if (first_iq_data[0]=="#"):
+            nbytes_to_look = int(first_iq_data[1])
+            print("nbytestolook="+str(nbytes_to_look))
+            nbytes = int(first_iq_data[2:2+nbytes_to_look])
+            print("nbytesfirstcall="+str(nbytes))
+            countbytes = nbytes
+            while (len(total_iq_data)<nbytes):
+                time.sleep(2)
+                iq_data = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
+                iq_data = iq_data[2:-1]
+                if countbytes<len(iq_data): iq_data = iq_data[:countbytes]
+                total_iq_data += iq_data
+                countbytes -= len(iq_data)
+                print(countbytes)
+        send_command(conn, ":IQ:DISCard\n",wait_secs)
+        timestamp = datetime.datetime.now()
+        timestamp_string = timestamp.strftime("%Y%m%d%H%M%S")
         #print(dati)
-        log_file = open(c.log_iq_file, 'a')
-        log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
-                                           dati))
-        time.sleep(10)
+        splitpathfile = c.log_iq_file.rsplit(".",1)
+        pathfile = splitpathfile[0]+"_"+timestamp_string+"."+splitpathfile[1]
+        log_file = open(pathfile, 'w')
+        log_file.write('{}\n'.format(total_iq_data))
+        log_file.close()
+        time.sleep(1)
+    exit(0)
 
 def dbmm2_to_vm(value):
     value_in_dbmuvm = value + 115.8

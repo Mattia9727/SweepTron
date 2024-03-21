@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
-
-from . import constants as c
+import sys
+sys.path.append('../../data/')
+import constants as c
 
 def callbackTransferData(channel, method, properties, body):
     msg = body.decode()

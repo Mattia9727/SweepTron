@@ -28,7 +28,6 @@ def create_content_and_clear_log(filename):
     with open(filename, 'w') as fp:
         # iterate each line
         for number, line in enumerate(lines):
-            # delete line 5 and 8. or pass any Nth line you want to remove
             # note list index starts from 0
             if number not in range(i):
                 fp.write(line)

@@ -20,7 +20,7 @@ iq_measures_dir = os.path.join(data_folder, constants["iq_measures_dir"])
 
 error_log_file = os.path.join(data_folder, constants["error_log_file"])
 log_file = os.path.join(data_folder,measures_dir, constants["log_file"])
-log_iq_file = os.path.join(data_folder,measures_dir, constants["log_iq_file"])
+log_iq_file = os.path.join(data_folder,iq_measures_dir, constants["log_iq_file"])
 compressed_log_file = os.path.join(data_folder, constants["compressed_log_file"])
 compressed_iq_log_file = os.path.join(data_folder, constants["compressed_iq_log_file"])
 
@@ -61,3 +61,7 @@ time_search_for_adjust_ref_level_scale = constants["time_search_for_adjust_ref_l
 
 server_ip = constants["server_ip"]
 url = constants["url"]
+
+iq_length_value = constants["iq_length_value"]
+iq_length_unit = constants["iq_length_unit"]
+iq_bits = constants["iq_bits"]
