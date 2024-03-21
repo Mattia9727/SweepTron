@@ -71,11 +71,13 @@ def callback_transfer_normal_data(ch, method, properties, body):
     if (check_server_reachability == False):
         print("Server irraggiungibile... provare più tardi")
         return
-    
+
+    body_strings = body.decode("utf-8").rsplit(".",1)
+
     with open(body, 'r') as file:
         lines = file.readlines()
     emptyfile = True
-    with open("temp_"+body, 'w') as file:
+    with open(body_strings[0]+"temp."+body_strings[1], 'w') as file:
         for line in lines:
             # Dividi la riga in timestamp, freq, dbmm2, vmvalue
             parts = line.split()

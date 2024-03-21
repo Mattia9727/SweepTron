@@ -61,14 +61,12 @@ def sendNormalCapture(ch):
     try:
         os.rename(c.log_file, new_name)
     except FileExistsError:
-        pass
+        print("Something strange happened (datetime_now?)")
+        exit(0)
 
     ch.basic_publish(exchange='',
                      routing_key='S-T',
                      body=new_name)
-
-
-
 
 
 def startTransferData(ch):
