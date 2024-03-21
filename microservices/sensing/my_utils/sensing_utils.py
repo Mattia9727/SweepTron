@@ -203,7 +203,7 @@ def measureMS2090A(conn, location_name):
 
     curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
-    log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
+    #log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
 
     for f in range(c.num_frequencies):
 
@@ -233,13 +233,13 @@ def measureMS2090A(conn, location_name):
 
             if c.print_debug > 0:
                 log_file.write('Timestamp: {} - Frequency: {} - Channel power in DBm/m2: {} - Channel power in V/m: {}\n'.format(
-                    datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+                    datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                     measured_emf_matrix_base_station[f, i], emf_in_vm))
             else:
-                log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+                log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                                                    measured_emf_matrix_base_station[f, i], emf_in_vm))
 
-            # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
+            # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))
             time.sleep(c.inter_sample_time)
 
