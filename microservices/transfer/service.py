@@ -33,7 +33,7 @@ import win32serviceutil  # ServiceFramework and commandline helper
 import win32service  # Events
 import servicemanager  # Simple setup and logging
 
-from microservices.sensing.main import main
+from main import main
 
 
 class MyService:
@@ -53,8 +53,8 @@ class MyService:
 
 class MyServiceFramework(win32serviceutil.ServiceFramework):
 
-    _svc_name_ = 'search24_transfer'
-    _svc_display_name_ = 'Search24: Data transfer service.'
+    _svc_name_ = 'SweepTron_Transfer'
+    _svc_display_name_ = 'SweepTron: Data transfer service.'
 
     def SvcStop(self):
         """Stop the service"""

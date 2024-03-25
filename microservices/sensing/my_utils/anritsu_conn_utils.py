@@ -1,9 +1,6 @@
 import datetime
-import os
 import socket
 
-import sys
-sys.path.append('../../data/')
 import constants as c
 
 # TCP_IP = '160.80.83.142'
@@ -85,7 +82,7 @@ def get_message(conn, message, wait=-1):
 
 
 def update_error_log(message):
-    error_log_file_name = os.path.join(c.error_log_file)
+    error_log_file_name = c.error_log_file
     error_log_file = open(error_log_file_name, 'a')
     current_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
     error_log_file.write(str(format(current_timestamp)) + " " + message + "\n")

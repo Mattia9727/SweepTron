@@ -6,10 +6,6 @@ from math import sqrt
 import numpy as np
 from matplotlib import pyplot as plt
 
-import sys
-sys.path.append('../../data/')
-
-
 import constants as c
 
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
@@ -112,11 +108,12 @@ def plot_measure(measured_emf_matrix_base_station,f):
     plt.savefig(os.path.join(c.grafici_dir, plot_file))
     plt.clf()
 
-def iq_measureMS2090A(conn, location_name):
+def iq_measureMS2090A(ch, conn, location_name):
     #print(get_message(conn, "*IDN?\n"))
     # Set Frequency
     wait_secs = 20
     for f in range(c.iq_num_frequencies):
+        ch.pingToWatchdog()
         print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
         send_command(conn, ":SENS:FREQ:START {} MHz;\n".format(c.iq_frequency_start[f]),wait_secs)
         send_command(conn, ":SENS:FREQ:STOP {} MHz;\n".format(c.iq_frequency_stop[f]),wait_secs)
@@ -200,7 +197,7 @@ def dbmm2_to_vm(value):
     return value_in_vm
 
 
-def measureMS2090A(conn, location_name):
+def measureMS2090A(ch, conn, location_name):
     measured_emf_matrix_base_station = np.zeros((c.num_frequencies, c.number_samples_chp))
     time_array = np.empty((c.num_frequencies, c.number_samples_chp), dtype=object)
 
@@ -219,6 +216,7 @@ def measureMS2090A(conn, location_name):
     #log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
 
     for f in range(c.num_frequencies):
+        ch.pingToWatchdog()
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
@@ -267,7 +265,7 @@ def measureMS2090A(conn, location_name):
     # csv_file.close()
     # Add code to stop the loop or exit gracefully if needed
 
-def measureMS2760A(conn, location_name):
+def measureMS2760A(ch, conn, location_name):
     measured_emf_matrix_base_station = np.zeros((c.num_frequencies, c.number_samples_chp))
     time_array = np.empty((c.num_frequencies, c.number_samples_chp), dtype=object)
 
@@ -289,6 +287,7 @@ def measureMS2760A(conn, location_name):
         log_file.close()
 
     for f in range(c.num_frequencies):
+        ch.pingToWatchdog()
         log_file = open(c.log_file, 'a')
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')

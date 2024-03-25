@@ -1,10 +1,14 @@
+import datetime
 import os
 import socket
+import threading
 import time
 import pika
 import requests
 import sys
-sys.path.append('../../data/')
+
+from my_utils.mq_utils import pingToWatchdog, stopToWatchdog
+
 import constants as c
 
 
@@ -101,33 +105,43 @@ def callback_transfer_normal_data(ch, method, properties, body):
     else:
         os.rename(body_strings[0]+"temp."+body_strings[1],body)
 
-    # last_transfer_data=""
-    # msg = "errore"
-    # if body!="old":
-    #     last_transfer_data = body
-    # if last_transfer_data !="":
-    #     msg = send_data(last_transfer_data)
 
     ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body=("normal_OK").encode("utf-8"))
-    # if msg == "OK":
-    #     os.remove(last_transfer_data)
 
-
-if __name__ == "__main__":
-    print("Transfer microservice ON")
+def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
 
     channel.queue_declare(queue='T-S')
+    channel.queue_declare(queue='T-W')
     channel.queue_declare(queue='S-T')
     channel.queue_declare(queue='P-T')
 
-    channel.basic_consume(queue='P-T', on_message_callback=callback_transfer_iq_data, auto_ack=True)
-    channel.basic_consume(queue='S-T', on_message_callback=callback_transfer_normal_data, auto_ack=True)
-
+    pingToWatchdog(channel)
     try:
+        channel.basic_consume(queue='P-T', on_message_callback=callback_transfer_iq_data, auto_ack=True)
+        channel.basic_consume(queue='S-T', on_message_callback=callback_transfer_normal_data, auto_ack=True)
         channel.start_consuming()
     except KeyboardInterrupt:
-        print(' [x] Consumatore interrotto.')
+        stopToWatchdog(channel)
+
+
+def start_consuming_thread():
+    # Crea un thread e avvia la funzione consume()
+    thread = threading.Thread(target=consume_thread)
+    thread.daemon = True
+    thread.start()
+
+def main():
+    print("Transfer microservice ON")
+    if (4 < datetime.datetime.now().hour < 7): exit(0)
+    with(open("C:\\Users\\matti\\Desktop\\debugservizio.txt", "a") as f):
+        f.write("Sensing microservice ON")
+    start_consuming_thread()
+    time.sleep(10800)
+    exit(0)
+
+if __name__ == "__main__":
+    main()

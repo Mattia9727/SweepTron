@@ -53,8 +53,8 @@ class MyService:
 
 class MyServiceFramework(win32serviceutil.ServiceFramework):
 
-    _svc_name_ = 'SweepTron_Processing'
-    _svc_display_name_ = 'SweepTron: Data compression service.'
+    _svc_name_ = 'SweepTron_Watchdog'
+    _svc_display_name_ = 'SweepTron: Watchdog service.'
 
     def SvcStop(self):
         """Stop the service"""

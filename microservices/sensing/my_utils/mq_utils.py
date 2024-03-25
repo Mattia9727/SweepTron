@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
-import sys
-sys.path.append('../../data/')
+
 import constants as c
 
 def callbackTransferData(channel, method, properties, body):
@@ -83,3 +82,12 @@ def startTransferData(ch):
         c.isTransfering = True
         sendIQCapture(ch)
 
+def pingToWatchdog(channel):
+    channel.basic_publish(exchange='',
+                     routing_key='S-W',
+                     body="ping")
+
+def stopToWatchdog(channel):
+    channel.basic_publish(exchange='',
+                     routing_key='S-W',
+                     body="stop")

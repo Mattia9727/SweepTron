@@ -28,15 +28,14 @@ dist\myservice.exe remove
 """
 import sys
 import time
+import servicemanager
+import win32service
+import win32serviceutil
 
-import win32serviceutil  # ServiceFramework and commandline helper
-import win32service  # Events
-import servicemanager  # Simple setup and logging
-
-from microservices.sensing.main import main
-
+from main import sensing_init
 
 class MyService:
+
     """Silly little application stub"""
     def stop(self):
         """Stop the service"""
@@ -48,13 +47,13 @@ class MyService:
         while self.running:
             time.sleep(10)  # Important work
             servicemanager.LogInfoMsg("Service running...")
-            main()
+            sensing_init()
 
 
 class MyServiceFramework(win32serviceutil.ServiceFramework):
 
-    _svc_name_ = 'search24_sensing'
-    _svc_display_name_ = 'Search24: Data capture service.'
+    _svc_name_ = 'SweepTron_Sensing'
+    _svc_display_name_ = 'SweepTron: Data capture service.'
 
     def SvcStop(self):
         """Stop the service"""
