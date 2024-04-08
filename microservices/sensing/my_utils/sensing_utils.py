@@ -10,6 +10,7 @@ import constants as c
 
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
     setup_for_single_freq, general_setup_connection_to_device
+from .mq_utils import pingToWatchdog
 
 import time
 
@@ -52,8 +53,13 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     max_marker = -200
     calc_min_marker = 200
 
+    send_command(conn,'CALCulate:MARKer1:STATe 1')
+    send_command(conn,'CALCulate:MARKer2:STATe 1')
+
     for i in range(time_search_max):
         time.sleep(1)
+
+
         send_command(conn,':CALC:MARKer1:MAXimum\n')  # put marker on maximum
         output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
         curr_max_marker = float(output_string)
@@ -84,7 +90,9 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     scale_div = abs(reference_level - calc_min_marker) / y_ticks
     if c.print_debug == 1:
         print(str(scale_div))
-    str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(scale_div)
+    if scale_div>15: scale_div=15
+    if scale_div<1: scale_div=1
+    str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(int(scale_div))
     send_command(conn,str_scale_div)  # automatic scale div setting
 
     return reference_level, scale_div
@@ -111,27 +119,40 @@ def plot_measure(measured_emf_matrix_base_station,f):
 def iq_measureMS2090A(ch, conn, location_name):
     #print(get_message(conn, "*IDN?\n"))
     # Set Frequency
-    wait_secs = 20
+    wait_msecs = 300000
+    import pyvisa as visa
+    from timeit import default_timer as timer
+    rm = visa.ResourceManager()
+    spa = rm.open_resource('TCPIP::10.0.0.2::9001::SOCKET')
+    spa.timeout = 10000      # Set Timeout to a value ighter than Capture time
+    spa.read_termination = '\n'
+    spa.write_termination = '\n'
+    spa.chunk_size = 2048
+    #print(spa.query("*IDN?"))   
+    #data = spa.write("*RST")
+    #time.sleep(10)
+    #print(get_message(conn, "*IDN?\n"))
+
     for f in range(c.iq_num_frequencies):
-        ch.pingToWatchdog()
+        pingToWatchdog(ch)
         print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
-        send_command(conn, ":SENS:FREQ:START {} MHz;\n".format(c.iq_frequency_start[f]),wait_secs)
-        send_command(conn, ":SENS:FREQ:STOP {} MHz;\n".format(c.iq_frequency_stop[f]),wait_secs)
+        data = spa.write(":SENS:FREQ:START {} MHz".format(c.iq_frequency_start[f]))
+        data = spa.write(":SENS:FREQ:STOP {} MHz".format(c.iq_frequency_stop[f]))
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
 
-        #print(get_message(conn, ":SYST:ERR?\n"))
+        #print(get_message(conn, ":SYST:ERR?"))
 
         # Set sweep mode
-        send_command(conn, "SWEEP:MODE FFT;\n",wait_secs)
+        # data = spa.write(":SWEep:MODE FFT")  # NON SUPPORTATO IN MS27201A
 
         # Set RBW
-        send_command(conn, ":SENS:BWID:RES {} MHz;\n".format(bandwidth),wait_secs)
+        data = spa.write(":SENS:BWID:RES {} MHz".format(bandwidth))
 
         # Set Reference Level to -30 dBm
-        send_command(conn, ":DISP:WIND:TRAC:Y:SCAL:RLEV -70;\n",wait_secs)
+        data = spa.write(":DISP:WIND:TRAC:Y:SCAL:RLEV -70")
 
         # Set to single sweep
-        send_command(conn, ":INIT:CONT ON;\n",wait_secs)
+        data = spa.write(":INIT:CONT ON")
 
         # Set number of display points to calculate frequency array
         # write("DISP:POIN 601;")
@@ -139,7 +160,7 @@ def iq_measureMS2090A(ch, conn, location_name):
         # Get number of display points to calculate frequency array
         # print(spa.query(":DISP:POIN?;"))
 
-        send_command(conn, ":SENS:AVER:TYPE NORM\n",wait_secs)
+        data = spa.write(":SENS:AVER:TYPE NORM")
 
         sb = ""
         #if (bandwidth == 10): sb = "SB12"
@@ -149,21 +170,47 @@ def iq_measureMS2090A(ch, conn, location_name):
         #else: sb = "SB19"
         sb = "SB19"
         # Prepare per IQ Capture
-        send_command(conn, "IQ:SAMP {}\n".format(sb),wait_secs)
-        send_command(conn, ":IQ:LENG {} {}\n".format(c.iq_length_value, c.iq_length_unit),wait_secs)
-        send_command(conn, ":IQ:BITS {}\n".format("c.iq_bits"),wait_secs)
-        send_command(conn, ":IQ:MODE SING\n",wait_secs)
-        send_command(conn, ":IQ:TIME OFF\n",wait_secs)
-        send_command(conn, ":TRACe:IQ:DATA:FORM PACK",wait_secs)
-        # send_command(conn, ":TRACe:IQ:DATA:FORM ASC\n",wait_secs)
-        send_command(conn, ":INIT:CONT ON;\n",wait_secs)
+        data = spa.write("IQ:SAMP {}".format(sb))
+        data = spa.write(":IQ:LENG {} {}".format(c.iq_length_value, c.iq_length_unit))
+        data = spa.write(":IQ:BITS {}".format(c.iq_bits))
+        data = spa.write(":IQ:MODE SING")
+        data = spa.write(":IQ:TIME OFF")
+        # data = spa.write(":TRACe:IQ:DATA:FORM PACK")
+        # data = spa.write(":TRAC:IQ:DATA:FORM ASC")
+        data = spa.write(":INIT:CONT ON")
         print("Start Capture....\n")
-        send_command(conn, "MEAS:IQ:CAPT\n",wait_secs)
-        status = get_message(conn, ":STAT:OPER?\n",wait_secs)
-        print("Sweep Status:  " + status)
+        data = spa.write(":IQ:DISCard")
 
-        first_iq_data = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
-        print(len(first_iq_data))
+        spa.read_termination = ''
+        data = spa.write("MEAS:IQ:CAPT")
+        spa.read_termination = '\n'     
+
+        #status = spa.query(":STAT:OPER?\n")
+        #print("Sweep Status:  " + status)
+
+        time.sleep(1)
+
+        dati = spa.query("TRAC:IQ:DATA?\n")
+        print(len(dati))
+
+        time.sleep(1)
+
+        dati2 = spa.query("TRAC:IQ:DATA?\n")
+        print(len(dati2))
+
+        time.sleep(1)
+
+        dati3 = spa.query("TRAC:IQ:DATA?\n")
+        print(len(dati3))
+
+        count=100
+        i=0
+        while i < count:
+            # dati = spa.query(":FETCh:PEAK?")
+            dati = spa.query("TRACE:DATA? 1")
+            print (dati)
+            i=i+1
+
         total_iq_data = ""
         if (first_iq_data[0]=="#"):
             nbytes_to_look = int(first_iq_data[1])
@@ -173,13 +220,13 @@ def iq_measureMS2090A(ch, conn, location_name):
             countbytes = nbytes
             while (len(total_iq_data)<nbytes):
                 time.sleep(2)
-                iq_data = get_message(conn, "TRAC:IQ:DATA?\n",wait_secs)
+                iq_data = get_message(conn, "TRAC:IQ:DATA?")
                 iq_data = iq_data[2:-1]
                 if countbytes<len(iq_data): iq_data = iq_data[:countbytes]
                 total_iq_data += iq_data
                 countbytes -= len(iq_data)
                 print(countbytes)
-        send_command(conn, ":IQ:DISCard\n",wait_secs)
+        data = spa.write(":IQ:DISCard")
         timestamp = datetime.datetime.now()
         timestamp_string = timestamp.strftime("%Y%m%d%H%M%S")
         #print(dati)
@@ -216,7 +263,7 @@ def measureMS2090A(ch, conn, location_name):
     #log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
 
     for f in range(c.num_frequencies):
-        ch.pingToWatchdog()
+        pingToWatchdog(ch)
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
@@ -234,7 +281,7 @@ def measureMS2090A(ch, conn, location_name):
         setup_for_single_freq(conn, f)
 
         for i in range(c.time_search_for_adjust_ref_level_scale):
-            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks, c.minimum_level_no_pre_amp[f])
+            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks, c.minimum_level_no_pre_amp[f], c.frequency_start[f])
 
         for i in range(c.number_samples_chp):
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  # Fetch current value of channel power
@@ -287,7 +334,7 @@ def measureMS2760A(ch, conn, location_name):
         log_file.close()
 
     for f in range(c.num_frequencies):
-        ch.pingToWatchdog()
+        pingToWatchdog(ch)
         log_file = open(c.log_file, 'a')
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
@@ -304,7 +351,7 @@ def measureMS2760A(ch, conn, location_name):
         setup_for_single_freq(conn, f)
 
         for i in range(c.time_search_for_adjust_ref_level_scale):
-            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks)
+            adjust_ref_level_scale_div(conn, c.initial_guard_amplitude[f], c.time_search_for_adjust_ref_level_scale, c.y_ticks, c.minimum_level_no_pre_amp[f], c.frequency_start[f])
 
 
         for i in range(c.number_samples_chp):

@@ -10,7 +10,7 @@ TCP_IP = '10.0.0.2'
 # TCP_IP = 'localhost'          #Per ultraportable
 TCP_PORT = 9001
 # TCP_PORT = 59001              #Per ultraportable
-BUFFER_SIZE = 8192
+BUFFER_SIZE = 8192000
 TIMEOUT = 3  # amount of time in s between one command and the following time
 
 

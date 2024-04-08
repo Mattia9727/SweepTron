@@ -11,42 +11,46 @@ import pika
 from restarter import start_restarter_thread
 
 import constants as c
+from my_utils.log_utils import print_in_log
+import servicemanager  # Simple setup and logging
 
 
 def callback_sensing(ch, method, properties, body):
     if (body.decode("utf-8") == "stop"):
         c.sensing_activity = False
-        print("[Watchdog] Sensing -> Stop")
+        print_in_log("[Watchdog] Sensing -> Stop")
     elif (body.decode("utf-8") == "ping"):
-        if (c.sensing_activity==False): print("[Watchdog] Sensing -> Start")
+        if (c.sensing_activity==False): print_in_log("[Watchdog] Sensing -> Start")
         c.sensing_activity = datetime.datetime.now()
-        print("[Watchdog] Sensing -> Ping")
-    else: print("[Watchdog] Messaggio inaspettato da Sensing")
+        print_in_log("[Watchdog] Sensing -> Ping")
+    else: print_in_log("[Watchdog] Messaggio inaspettato da Sensing")
 
 def callback_processing(ch, method, properties, body):
     if (body.decode("utf-8") == "stop"):
         c.processing_activity = False
-        print("[Watchdog] Processing -> Stop")
+        print_in_log("[Watchdog] Processing -> Stop")
     elif (body.decode("utf-8") == "ping"):
-        if (c.processing_activity==False): print("[Watchdog] Processing -> Start")
+        if (c.processing_activity==False): print_in_log("[Watchdog] Processing -> Start")
         c.processing_activity = datetime.datetime.now()
-        print("[Watchdog] Processing -> Ping")
+        print_in_log("[Watchdog] Processing -> Ping")
     else:
-        print("[Watchdog] Messaggio inaspettato da Processing")
+        print_in_log("[Watchdog] Messaggio inaspettato da Processing")
 
 def callback_transfer(ch, method, properties, body):
     if (body.decode("utf-8") == "stop"):
         c.transfer_activity = False
-        print("[Watchdog] Transfer -> Stop")
+        print_in_log("[Watchdog] Transfer -> Stop")
     elif (body.decode("utf-8") == "ping"):
         if (c.transfer_activity==False): print("[Watchdog] Transfer -> Start")
         c.transfer_activity = datetime.datetime.now()
-        print("[Watchdog] Transfer -> Ping")
+        print_in_log("[Watchdog] Transfer -> Ping")
     else:
-        print("[Watchdog] Messaggio inaspettato da Transfer")
+        print_in_log("[Watchdog] Messaggio inaspettato da Transfer")
 
 def main():
-    print("[Watchdog] Start service")
+    
+    servicemanager.LogInfoMsg("Service running...")
+    print_in_log("[Watchdog] Start service")
     start_restarter_thread()
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
@@ -66,9 +70,7 @@ def main():
                           on_message_callback=callback_transfer)
 
     while(True):
-        print("Wait for messages")
         channel.start_consuming()
-        print("Wait done")
 
 if __name__ == "__main__":
     main()

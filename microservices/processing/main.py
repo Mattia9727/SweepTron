@@ -35,7 +35,7 @@ def consume_thread():
     channel = connection.channel()
     channel.queue_declare(queue='P-T')
     channel.queue_declare(queue='S-P')
-    channel.queue_declare(queue='S-W')
+    channel.queue_declare(queue='P-W')
     pingToWatchdog(channel)
     try:
         channel.basic_consume(queue='S-P', on_message_callback=callback_processing_data, auto_ack=True)
