@@ -57,11 +57,9 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
 
     m1status = int(get_message(conn, 'CALCulate:MARKer1:STATe?\n'))
     m2status = int(get_message(conn, 'CALCulate:MARKer2:STATe?\n'))
-    print(m1status)
-    print(m2status)
     if m1status != 1:
         send_command(conn, 'CALCulate:MARKer1:STATe 1\n')
-    if m1status != 1:
+    if m2status != 1:
         send_command(conn, 'CALCulate:MARKer2:STATe 1\n')
 
     for i in range(time_search_max):
