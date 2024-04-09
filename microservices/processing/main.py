@@ -12,7 +12,6 @@ from my_utils.mq_utils import stopToWatchdog, pingToWatchdog
 def compress_iq_lzma(body):
     with open(body, "rb") as f:
         data = f.read()
-    print(body)
     print_in_log("Compressing " + body)
     body2 = body.decode().replace(c.iq_measures_dir,c.processed_iq_measures_dir)
     with lzma.open(body2, "w") as f:
@@ -22,7 +21,6 @@ def compress_iq_lzma(body):
 
 
 def callback_processing_data(ch, method, properties, body):
-    print("Callback processing attivato")
     print_in_log("Callback processing attivato")
     body2 = compress_iq_lzma(body)
     ch.basic_publish(exchange='',
@@ -53,12 +51,25 @@ def start_consuming_thread():
 
 
 def main():
-    print("Processing microservice ON")
-    if (4<datetime.datetime.now().hour<7): exit(0)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    channel = connection.channel()
+
+    if (4<datetime.datetime.now().hour<7):
+        stopToWatchdog(channel)
+        return
+
     print_in_log("Processing microservice ON")
     start_consuming_thread()
-    time.sleep(10800)
-    exit(0)
+
+    # TODO: Provvisorio, capire come gestire bene watchdog
+    now = datetime.datetime.now()
+    delta = datetime.timedelta(hours=3)
+    while (now + delta < datetime.datetime.now()):
+        time.sleep(30)
+        pingToWatchdog(channel)
+    stopToWatchdog(channel)
+
+    return
 
 
 if __name__ == "__main__":

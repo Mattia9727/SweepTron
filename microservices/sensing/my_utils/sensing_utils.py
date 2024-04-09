@@ -10,9 +10,11 @@ import constants as c
 
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
     setup_for_single_freq, general_setup_connection_to_device
+import time
+
+from .log_utils import print_in_log
 from .mq_utils import pingToWatchdog
 
-import time
 
 def interp_af(freqs):
 
@@ -53,8 +55,14 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     max_marker = -200
     calc_min_marker = 200
 
-    send_command(conn,'CALCulate:MARKer1:STATe 1')
-    send_command(conn,'CALCulate:MARKer2:STATe 1')
+    m1status = int(get_message(conn, 'CALCulate:MARKer1:STATe?\n'))
+    m2status = int(get_message(conn, 'CALCulate:MARKer2:STATe?\n'))
+    print(m1status)
+    print(m2status)
+    if m1status != 1:
+        send_command(conn, 'CALCulate:MARKer1:STATe 1\n')
+    if m1status != 1:
+        send_command(conn, 'CALCulate:MARKer2:STATe 1\n')
 
     for i in range(time_search_max):
         time.sleep(1)
@@ -81,7 +89,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
 
     calc_min_marker = int(calc_min_marker) - curr_margin
 
-    #print("Actual min margin {} Should be like {}".format(calc_min_marker, min_marker))
+    #print_in_log("Actual min margin {} Should be like {}".format(calc_min_marker, min_marker))
 
     str_level = ':DISP:WIND:TRAC:Y:SCAL:RLEV {}\n'.format(reference_level)
     send_command(conn,str_level)  # setting reference level
@@ -128,7 +136,7 @@ def iq_measureMS2090A(ch, conn, location_name):
     spa.read_termination = '\n'
     spa.write_termination = '\n'
     spa.chunk_size = 2048
-    #print(spa.query("*IDN?"))   
+    #print(spa.query("*IDN?"))
     #data = spa.write("*RST")
     #time.sleep(10)
     #print(get_message(conn, "*IDN?\n"))
@@ -183,7 +191,7 @@ def iq_measureMS2090A(ch, conn, location_name):
 
         spa.read_termination = ''
         data = spa.write("MEAS:IQ:CAPT")
-        spa.read_termination = '\n'     
+        spa.read_termination = '\n'
 
         #status = spa.query(":STAT:OPER?\n")
         #print("Sweep Status:  " + status)
@@ -211,31 +219,31 @@ def iq_measureMS2090A(ch, conn, location_name):
             print (dati)
             i=i+1
 
-        total_iq_data = ""
-        if (first_iq_data[0]=="#"):
-            nbytes_to_look = int(first_iq_data[1])
-            print("nbytestolook="+str(nbytes_to_look))
-            nbytes = int(first_iq_data[2:2+nbytes_to_look])
-            print("nbytesfirstcall="+str(nbytes))
-            countbytes = nbytes
-            while (len(total_iq_data)<nbytes):
-                time.sleep(2)
-                iq_data = get_message(conn, "TRAC:IQ:DATA?")
-                iq_data = iq_data[2:-1]
-                if countbytes<len(iq_data): iq_data = iq_data[:countbytes]
-                total_iq_data += iq_data
-                countbytes -= len(iq_data)
-                print(countbytes)
-        data = spa.write(":IQ:DISCard")
-        timestamp = datetime.datetime.now()
-        timestamp_string = timestamp.strftime("%Y%m%d%H%M%S")
-        #print(dati)
-        splitpathfile = c.log_iq_file.rsplit(".",1)
-        pathfile = splitpathfile[0]+"_"+timestamp_string+"."+splitpathfile[1]
-        log_file = open(pathfile, 'w')
-        log_file.write('{}\n'.format(total_iq_data))
-        log_file.close()
-        time.sleep(1)
+        # total_iq_data = ""
+        # if (first_iq_data[0]=="#"):
+        #     nbytes_to_look = int(first_iq_data[1])
+        #     print("nbytestolook="+str(nbytes_to_look))
+        #     nbytes = int(first_iq_data[2:2+nbytes_to_look])
+        #     print("nbytesfirstcall="+str(nbytes))
+        #     countbytes = nbytes
+        #     while (len(total_iq_data)<nbytes):
+        #         time.sleep(2)
+        #         iq_data = get_message(conn, "TRAC:IQ:DATA?")
+        #         iq_data = iq_data[2:-1]
+        #         if countbytes<len(iq_data): iq_data = iq_data[:countbytes]
+        #         total_iq_data += iq_data
+        #         countbytes -= len(iq_data)
+        #         print(countbytes)
+        # data = spa.write(":IQ:DISCard")
+        # timestamp = datetime.datetime.now()
+        # timestamp_string = timestamp.strftime("%Y%m%d%H%M%S")
+        # #print(dati)
+        # splitpathfile = c.log_iq_file.rsplit(".",1)
+        # pathfile = splitpathfile[0]+"_"+timestamp_string+"."+splitpathfile[1]
+        # log_file = open(pathfile, 'w')
+        # log_file.write('{}\n'.format(total_iq_data))
+        # log_file.close()
+        # time.sleep(1)
     exit(0)
 
 def dbmm2_to_vm(value):
@@ -266,7 +274,7 @@ def measureMS2090A(ch, conn, location_name):
         pingToWatchdog(ch)
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-        print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
+        print_in_log("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
         #servicemanager.LogInfoMsg("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
 
         c.transmission_freq_used = False
@@ -275,7 +283,7 @@ def measureMS2090A(ch, conn, location_name):
 
         if c.iq_mode == 1:
             if c.transmission_freq_used == True and c.isTransfering == True:
-                print("Invio dati in IQ_MODE nella frequenza attuale. Passo alla frequenza successiva.")
+                print_in_log("Invio dati in IQ_MODE nella frequenza attuale di trasferimento. Passo alla frequenza successiva.")
                 continue
 
         setup_for_single_freq(conn, f)
@@ -338,14 +346,14 @@ def measureMS2760A(ch, conn, location_name):
         log_file = open(c.log_file, 'a')
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-        print("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
+        print_in_log("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
 
         c.transmission_freq_used = False
         if c.frequency_center[f] in c.transmission_freq:  # Controllo di frequenza di invio
             c.transmission_freq_used = True
 
         if c.iq_mode == 1 and c.transmission_freq_used == True and c.isTransfering == True:
-            print("Invio dati in IQ_MODE nella frequenza attuale. Passo alla frequenza successiva.")
+            print_in_log("Invio dati in IQ_MODE nella frequenza attuale di trasferimento. Passo alla frequenza successiva.")
             continue
 
         setup_for_single_freq(conn, f)
@@ -358,7 +366,7 @@ def measureMS2760A(ch, conn, location_name):
 
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  # Fetch current value of channel power
             if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
-                print("Problema valore CHP, reset connessione e riprovo misurazione...")
+                print_in_log("Problema valore CHP, reset connessione e riprovo misurazione...")
                 conn.close()
                 conn, _ = general_setup_connection_to_device()
                 i-=1
@@ -368,7 +376,7 @@ def measureMS2760A(ch, conn, location_name):
             time_array[f, i] = datetime.datetime.now()
 
             if c.print_debug > 0:
-                print('{} - {} - {}'.format(
+                print_in_log('{} - {} - {}'.format(
                             datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
                             measured_emf_matrix_base_station[f, i]))
 

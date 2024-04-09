@@ -22,9 +22,9 @@ def sensing(ch):
     today = -1
     # Monitoring of all DL frequencies
     while True:  # You might want to replace 'True' with a condition to stop the loop
-        #condition = 4 <= datetime.datetime.now().hour <= 7
+        condition = 4 <= datetime.datetime.now().hour <= 7
         pingToWatchdog(ch)
-        condition = False  #TODO: provvisorio, da capire perché fallisce comunicazione con coda se passa troppo tempo
+        # condition = False  #TODO: provvisorio, da capire perché fallisce comunicazione con coda se passa troppo tempo
         if condition or c.debug_transfer:
             if c.transferedToday == 0:
                 startTransferData(ch)
@@ -58,11 +58,11 @@ def consume_thread():
                           auto_ack=True,
                           on_message_callback=callbackTransferData)
 
-    print("Inizio consume")
+    print_in_log("Inizio consume")
     try:
         channel.start_consuming()
     except KeyboardInterrupt:
-        print(' [x] Consumatore interrotto.')
+        print_in_log(' [x] Consumatore interrotto.')
 
 
 def start_consuming_thread():
@@ -78,8 +78,8 @@ def sensing_init():
 
     channel.queue_declare(queue='S-P')
     channel.queue_declare(queue='S-T')
+    channel.queue_declare(queue='S-W')
     try:
-        print("Sensing microservice ON")
         print_in_log("Sensing microservice ON")
 
         start_consuming_thread()

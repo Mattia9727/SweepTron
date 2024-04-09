@@ -3,6 +3,8 @@ import socket
 
 import constants as c
 
+from .log_utils import print_in_log
+
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
 TCP_IP = '10.0.0.2'
@@ -20,12 +22,12 @@ def find_device():
     try:
         # Connessione al dispositivo
         client_socket.connect((TCP_IP, TCP_PORT))
-        print(get_message(client_socket, '*IDN?\n'))
+        print_in_log(get_message(client_socket, '*IDN?\n'))
     except Exception as e:
-        print("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT), str(e))
+        print_in_log("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT), str(e))
         exit(0)
 
-    print("Device found in IP {}, port {}".format(TCP_IP, TCP_PORT))
+    print_in_log("Device found in IP {}, port {}".format(TCP_IP, TCP_PORT))
     client_socket.close()
 
 
@@ -38,7 +40,7 @@ def connect_to_device():
         client_socket.connect((TCP_IP, TCP_PORT))
 
     except Exception as e:
-        print("Errore durante la comunicazione con il dispositivo:", str(e))
+        print_in_log("Errore durante la comunicazione con il dispositivo:", str(e))
 
     return client_socket
 
@@ -50,7 +52,7 @@ def send_command(conn, message, wait=-1):
         conn.send(message.encode())
 
     except Exception as e:
-        print("Errore durante l'invio dei dati:", str(e))
+        print_in_log("Errore durante l'invio dei dati:", str(e))
 
     if wait != -1:
         conn.settimeout(TIMEOUT)
@@ -68,7 +70,7 @@ def get_message(conn, message, wait=-1):
         recv_message = conn.recv(BUFFER_SIZE)
 
     except Exception as e:
-        print("Errore durante la ricezione dei dati:", str(e))
+        print_in_log("Errore durante la ricezione dei dati:", str(e))
         recv_message = get_error(conn)  # TODO: da capire bene cosa fare qui
 
     if wait != -1:
@@ -93,7 +95,6 @@ def get_error(conn):
         error = get_message(conn, ':SYSTem:ERRor?\n')
         if error[0] != "0":
             err_split = error.split(",")
-            print(err_split)
             update_error_log(error)
 
             # TODO: Gestione errori Anritsu
@@ -114,7 +115,7 @@ def setup_anritsu_device_MS2090A(conn):
     send_command(conn,':CONFigure:CHPower\n')
     send_command(conn,':FSTRength:STATe 1\n')
     send_command(conn,':FSTRength:ANTenna "{}"\n'.format(c.antenna_file))
-    send_command(conn,':UNIT:POW DBM/M2\n')  # Unit in terms of field strength (volt meter). IMPORTANT: DOUBLE CHECK THAT THE ANTENNA FILE ON THE SA IS CORRECT!
+    send_command(conn,':UNIT:POW DBM/M2\n')  # Unit in terms of field strength. IMPORTANT: DOUBLE CHECK THAT THE ANTENNA FILE ON THE SA IS CORRECT!
     send_command(conn,':POW:RF:ATT:AUTO OFF\n')  # Automatic input attenuation coupling
     send_command(conn,':POW:RF:ATT 0 DB\n')  # Set attenuation to 0 dB
     send_command(conn,':POW:RF:GAIN:STAT OFF\n')  # Turn off pre-amplifier for initial setting

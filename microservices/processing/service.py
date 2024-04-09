@@ -49,6 +49,7 @@ class MyService:
             time.sleep(10)  # Important work
             servicemanager.LogInfoMsg("Service running...")
             main()
+            self.stop()
 
 
 class MyServiceFramework(win32serviceutil.ServiceFramework):

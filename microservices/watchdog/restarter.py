@@ -15,11 +15,19 @@ def restart_service(service_name):
     elif service_name == "SweepTron_Transfer":
         c.transfer_activity = False
     print('[Watchdog] {} restarted'.format(service_name))
+    return
+
+def start_all():
+    restart_service("SweepTron_Transfer")
+    restart_service("SweepTron_Processing")
+    restart_service("SweepTron_Sensing")
+    return
 
 def restarter():
     try:
+        start_all()
         while(True):
-            if (c.sensing_activity != False and c.sensing_activity + datetime.timedelta(seconds=5) < datetime.datetime.now()):
+            if (c.sensing_activity != False and c.sensing_activity + datetime.timedelta(minutes=5) < datetime.datetime.now()):
                 restart_service("SweepTron_Sensing")
             if (c.processing_activity != False and c.processing_activity + datetime.timedelta(minutes=5) < datetime.datetime.now()):
                 restart_service("SweepTron_Processing")

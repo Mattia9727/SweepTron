@@ -7,6 +7,7 @@ import pika
 import requests
 import sys
 
+from my_utils.log_utils import print_in_log
 from my_utils.mq_utils import pingToWatchdog, stopToWatchdog
 
 import constants as c
@@ -16,10 +17,10 @@ def check_server_reachability():
     ip_port = c.server_ip.split(":")
     try:
         socket.create_connection((ip_port[0], ip_port[1]), timeout=5)
-        print(f"Server {ip_port[0],}:{ip_port[1]} is reachable.")
+        print_in_log(f"Server {ip_port[0],}:{ip_port[1]} is reachable.")
         return True
     except socket.error as e:
-        print(f"Server {ip_port[0],}:{ip_port[1]} is not reachable. Error: {e}")
+        print_in_log(f"Server {ip_port[0],}:{ip_port[1]} is not reachable. Error: {e}")
         return False
 
 
@@ -30,7 +31,7 @@ def send_data(file_path):
             response = requests.post(c.url, files=files)
             return("OK")
         except requests.exceptions.ConnectionError:
-            print("Server non trovato. Verificare che il server sia acceso per il trasferimento.")
+            print_in_log("Server non trovato. Verificare che il server sia acceso per il trasferimento.")
             return("errore")
 
 
@@ -48,19 +49,19 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
 
     # # Verifica lo stato della risposta
     # if response.status_code == 200:
-    #     print("Dati inviati correttamente al server.")
+    #     print_in_log("Dati inviati correttamente al server.")
     # else:
-    #     print("Errore durante l'invio dei dati al server.")
+    #     print_in_log("Errore durante l'invio dei dati al server.")
     return str(response.status_code)
 
 
 
 
 def callback_transfer_iq_data(ch, method, properties, body):
-    print("Callback transfer iq attivato")
+    print_in_log("Callback transfer iq attivato")
 
     if (check_server_reachability == False):
-        print("Server irraggiungibile... provare più tardi")
+        print_in_log("Server irraggiungibile... provare più tardi")
         return
     
     msg = send_data(body.decode())
@@ -72,10 +73,10 @@ def callback_transfer_iq_data(ch, method, properties, body):
 
 
 def callback_transfer_normal_data(ch, method, properties, body):
-    print("Callback transfer normal attivato")
+    print_in_log("Callback transfer normal attivato")
 
     if (check_server_reachability == False):
-        print("Server irraggiungibile... provare più tardi")
+        print_in_log("Server irraggiungibile... provare più tardi")
         return
 
     body_strings = body.decode("utf-8").rsplit(".",1)
@@ -135,13 +136,23 @@ def start_consuming_thread():
     thread.start()
 
 def main():
-    print("Transfer microservice ON")
-    if (4 < datetime.datetime.now().hour < 7): exit(0)
-    with(open("C:\\Users\\matti\\Desktop\\debugservizio.txt", "a") as f):
-        f.write("Sensing microservice ON")
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    channel = connection.channel()
+    if (4 < datetime.datetime.now().hour < 7 and not c.debug_transfer):
+        stopToWatchdog(channel)
+        return
+    print_in_log("Transfer microservice ON")
     start_consuming_thread()
-    time.sleep(10800)
-    exit(0)
+
+    #TODO: Provvisorio, capire come gestire bene watchdog
+    now = datetime.datetime.now()
+    delta = datetime.timedelta(hours=3)
+    while (now+delta < datetime.datetime.now()):
+        time.sleep(30)
+        pingToWatchdog(channel)
+    stopToWatchdog(channel)
+
+    return
 
 if __name__ == "__main__":
     main()

@@ -3,29 +3,32 @@ from datetime import datetime
 
 import constants as c
 
+from .log_utils import print_in_log
+
+
 def callbackTransferData(channel, method, properties, body):
     msg = body.decode()
     if msg.split("_")[0] == "IQ":
         c.isTransferingIQ = False
         if msg.split("_")[1] == "OK":
-            print("[Ricezione da Transfer] Trasferimento IQ completato")
+            print_in_log("[Ricezione da Transfer] Trasferimento IQ completato")
         else:
-            print("[Ricezione da Transfer] Trasferimento IQ fallito")
+            print_in_log("[Ricezione da Transfer] Trasferimento IQ fallito")
 
     else:
         c.isTransfering = False
         if msg.split("_")[1] == "OK":
-            print("[Ricezione da Transfer] Trasferimento cattura normale completato")
+            print_in_log("[Ricezione da Transfer] Trasferimento cattura normale completato")
         else:
-            print("[Ricezione da Transfer] Trasferimento cattura normale fallito")
+            print_in_log("[Ricezione da Transfer] Trasferimento cattura normale fallito")
 
 
 
 def sendIQCapture(ch):
-    print("[Invio a Transfer] Invio cattura IQ al processing MS per compressione.")
+    print_in_log("[Invio a Transfer] Invio cattura IQ al processing MS per compressione.")
 
     # if os.path.isfile(c.log_file[:-4] + "_tosend.dgz"):
-    #     print("[Invio a Transfer] Trasferimento di cattura IQ non ancora completato, attendere...")
+    #     print_in_log("[Invio a Transfer] Trasferimento di cattura IQ non ancora completato, attendere...")
     #     ch.basic_publish(exchange='',
     #                      routing_key='S-P',
     #                      body="iq_old")
@@ -47,10 +50,10 @@ def sendIQCapture(ch):
                              body=new_name.encode("utf-8"))
 
 def sendNormalCapture(ch):
-    print("[Invio a Transfer] Invio cattura normale al transfer per invio.")
+    print_in_log("[Invio a Transfer] Invio cattura normale al transfer per invio.")
 
     # if os.path.isfile(c.log_file[:-4] + "_tosend.dgz"):
-    #     print("[Invio a Transfer] Trasferimento di cattura normale non ancora completato, attendere...")
+    #     print_in_log("[Invio a Transfer] Trasferimento di cattura normale non ancora completato, attendere...")
     #     ch.basic_publish(exchange='',
     #                      routing_key='S-T',
     #                      body="old")
@@ -60,7 +63,7 @@ def sendNormalCapture(ch):
     try:
         os.rename(c.log_file, new_name)
     except FileExistsError:
-        print("Something strange happened (datetime_now?)")
+        print_in_log("Something strange happened (datetime_now?)")
         exit(0)
 
     ch.basic_publish(exchange='',
@@ -69,7 +72,7 @@ def sendNormalCapture(ch):
 
 
 def startTransferData(ch):
-    print("[Invio a Transfer] Trasferimento iniziato")
+    print_in_log("[Invio a Transfer] Trasferimento iniziato")
     normal_files = os.listdir(c.measures_dir)
     iq_normal_files = os.listdir(c.iq_measures_dir)
 

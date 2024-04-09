@@ -48,8 +48,6 @@ def callback_transfer(ch, method, properties, body):
         print_in_log("[Watchdog] Messaggio inaspettato da Transfer")
 
 def main():
-    
-    servicemanager.LogInfoMsg("Service running...")
     print_in_log("[Watchdog] Start service")
     start_restarter_thread()
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
@@ -71,6 +69,7 @@ def main():
 
     while(True):
         channel.start_consuming()
+
 
 if __name__ == "__main__":
     main()
