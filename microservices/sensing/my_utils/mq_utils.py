@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime
 
 import constants as c
@@ -61,7 +62,11 @@ def sendNormalCapture(ch):
     d = datetime.now()
     new_name = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
     try:
+        if c.lock_file == True:
+            time.sleep(0.01)
+        c.lock_file = True
         os.rename(c.log_file, new_name)
+        c.lock_file = False
     except FileExistsError:
         print_in_log("Something strange happened (datetime_now?)")
         exit(0)

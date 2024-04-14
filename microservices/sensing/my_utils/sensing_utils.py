@@ -259,7 +259,7 @@ def measureMS2090A(ch, conn, location_name):
         os.makedirs(c.logs_dir)
 
     # Create and open a TXT file to record data
-    log_file = open(c.log_file, 'a')
+
 
     # # Create and open a CSV file to record data
     # csv_file = open(os.path.join(c.log_file + '.csv'), 'a')
@@ -294,7 +294,10 @@ def measureMS2090A(ch, conn, location_name):
             measured_emf_matrix_base_station[f, i] = float(emf_measured_chp)
             time_array[f, i] = datetime.datetime.now()
             emf_in_vm = dbmm2_to_vm(measured_emf_matrix_base_station[f, i])
-
+            if c.lock_file == True:
+                time.sleep(0.01)
+            c.lock_file = True
+            log_file = open(c.log_file, 'a')
             if c.print_debug > 0:
                 log_file.write('Timestamp: {} - Frequency: {} - Channel power in DBm/m2: {} - Channel power in V/m: {}\n'.format(
                     datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
@@ -303,9 +306,12 @@ def measureMS2090A(ch, conn, location_name):
                 log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                                                    measured_emf_matrix_base_station[f, i], emf_in_vm))
 
+            log_file.close()
+            c.lock_file = False
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))
             time.sleep(c.inter_sample_time)
+
 
         plot_measure(measured_emf_matrix_base_station, f)
 
@@ -314,7 +320,6 @@ def measureMS2090A(ch, conn, location_name):
         c.transmission_freq_used = False
 
     # Close the log files
-    log_file.close()
     # csv_file.close()
     # Add code to stop the loop or exit gracefully if needed
 
@@ -334,14 +339,14 @@ def measureMS2760A(ch, conn, location_name):
 
     curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
 
-    if c.print_debug > 0:
-        log_file = open(c.log_file, 'a')
-        log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
-        log_file.close()
+    # if c.print_debug > 0:
+    #     log_file = open(c.log_file, 'a')
+    #     log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
+    #     log_file.close()
 
     for f in range(c.num_frequencies):
         pingToWatchdog(ch)
-        log_file = open(c.log_file, 'a')
+
 
         curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
         print_in_log("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
@@ -377,7 +382,10 @@ def measureMS2760A(ch, conn, location_name):
                 print_in_log('{} - {} - {}'.format(
                             datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
                             measured_emf_matrix_base_station[f, i]))
-
+            if c.lock_file == True:
+                time.sleep(0.01)
+            c.lock_file = True
+            log_file = open(c.log_file, 'a')
             # if c.print_debug > 0:
             #     log_file.write('Timestamp: {} - Frequency: {} - Channel power: {}\n'.format(
             #         datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
@@ -388,6 +396,8 @@ def measureMS2760A(ch, conn, location_name):
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))
+            log_file.close()
+            c.lock_file = False
             time.sleep(c.inter_sample_time)
 
         plot_measure(measured_emf_matrix_base_station, f)
@@ -395,7 +405,7 @@ def measureMS2760A(ch, conn, location_name):
         location_name_mat = '{}.mat'.format(location_name)
         np.save(location_name_mat, measured_emf_matrix_base_station)
         c.transmission_freq_used = False
-        log_file.close()
+
 
     # Close the log files
 
