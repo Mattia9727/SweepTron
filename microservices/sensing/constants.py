@@ -11,8 +11,8 @@ with open(settings_path) as f:
 
 # Estrai le costanti
 print_debug = constants["print_debug"]
-lock_file = False
 iq_mode = constants["iq_mode"]
+lock_file = False
 grafici_dir = data_folder+"\\"+ constants["grafici_dir"]
 logs_dir = data_folder+"\\"+ constants["logs_dir"]
 measures_dir = data_folder+"\\"+ constants["measures_dir"]

@@ -25,7 +25,7 @@ def sensing(ch):
         condition = 4 <= datetime.datetime.now().hour <= 7
         pingToWatchdog(ch)
         if condition or c.debug_transfer:
-            if c.transferedToday == 0:
+            if c.transferedToday == 0 or c.debug_transfer:
                 startTransferData(ch)
             c.transferedToday = 1
             today = datetime.datetime.today().day

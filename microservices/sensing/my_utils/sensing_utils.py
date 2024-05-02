@@ -55,34 +55,44 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     max_marker = -200
     calc_min_marker = 200
 
-    m1status = int(get_message(conn, 'CALCulate:MARKer1:STATe?\n'))
-    m2status = int(get_message(conn, 'CALCulate:MARKer2:STATe?\n'))
-    if m1status != 1:
-        send_command(conn, 'CALCulate:MARKer1:STATe 1\n')
-    if m2status != 1:
-        send_command(conn, 'CALCulate:MARKer2:STATe 1\n')
+    no_error = False
+    while (not no_error):
+        try:
+            for i in range(3):
+                time.sleep(1)
+                m1message = get_message(conn, 'CALCulate:MARKer1:STATe?\n')
+                m2message = get_message(conn, 'CALCulate:MARKer2:STATe?\n')
+        
+            m1status = int(m1message)
+            m2status = int(m2message)
+            if m1status != 1:
+                send_command(conn, 'CALCulate:MARKer1:STATe 1\n')
+            if m2status != 1:
+                send_command(conn, 'CALCulate:MARKer2:STATe 1\n')
 
-    for i in range(time_search_max):
-        time.sleep(1)
+            for i in range(time_search_max):
+                time.sleep(1)
 
 
-        send_command(conn,':CALC:MARKer1:MAXimum\n')  # put marker on maximum
-        output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
-        curr_max_marker = float(output_string)
+                send_command(conn,':CALC:MARKer1:MAXimum\n')  # put marker on maximum
+                output_string = get_message(conn,':CALC:MARKer1:Y?\n')  # query marker
+                curr_max_marker = float(output_string)
 
 
-        send_command(conn,':CALC:MARKer2:X {} MHZ\n'.format(freq_start))  # put marker on start (high probability that it's minimum)
-        output_string = get_message(conn,':CALC:MARKer2:Y?\n')  # query marker
-        curr_min_marker = float(output_string)
+                send_command(conn,':CALC:MARKer2:X {} MHZ\n'.format(freq_start))  # put marker on start (high probability that it's minimum)
+                output_string = get_message(conn,':CALC:MARKer2:Y?\n')  # query marker
+                curr_min_marker = float(output_string)
 
-        if curr_max_marker > max_marker:
-            max_marker = curr_max_marker
+                if curr_max_marker > max_marker:
+                    max_marker = curr_max_marker
 
-        if curr_min_marker < calc_min_marker:
-            calc_min_marker = curr_min_marker
+                if curr_min_marker < calc_min_marker:
+                    calc_min_marker = curr_min_marker
 
     #min_marker = -85   # TODO: capire come trovarlo dinamicamente  (val = valoredinamico - 20 (Db))
-
+            no_error = True
+        except ValueError:
+            no_error = False
     reference_level = int(max_marker) + curr_margin
 
     calc_min_marker = int(calc_min_marker) - curr_margin
@@ -359,6 +369,7 @@ def measureMS2760A(ch, conn, location_name):
             print_in_log("Invio dati in IQ_MODE nella frequenza attuale di trasferimento. Passo alla frequenza successiva.")
             continue
 
+
         setup_for_single_freq(conn, f)
 
         for i in range(c.time_search_for_adjust_ref_level_scale):
@@ -380,7 +391,7 @@ def measureMS2760A(ch, conn, location_name):
 
             if c.print_debug > 0:
                 print_in_log('{} - {} - {}'.format(
-                            datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
+                            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                             measured_emf_matrix_base_station[f, i]))
             if c.lock_file == True:
                 time.sleep(0.01)
@@ -388,10 +399,10 @@ def measureMS2760A(ch, conn, location_name):
             log_file = open(c.log_file, 'a')
             # if c.print_debug > 0:
             #     log_file.write('Timestamp: {} - Frequency: {} - Channel power: {}\n'.format(
-            #         datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
+            #         datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #         measured_emf_matrix_base_station[f, i]))
             # else:
-            log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S'), c.frequency_center[f],
+            log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                                                measured_emf_matrix_base_station[f, i]))
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
