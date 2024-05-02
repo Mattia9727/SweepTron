@@ -24,7 +24,7 @@ def find_device():
         client_socket.connect((TCP_IP, TCP_PORT))
         print_in_log(get_message(client_socket, '*IDN?\n'))
     except Exception as e:
-        print_in_log("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT), str(e))
+        print_in_log("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT) + str(e))
         exit(0)
 
     print_in_log("Device found in IP {}, port {}".format(TCP_IP, TCP_PORT))
@@ -40,7 +40,7 @@ def connect_to_device():
         client_socket.connect((TCP_IP, TCP_PORT))
 
     except Exception as e:
-        print_in_log("Errore durante la comunicazione con il dispositivo:", str(e))
+        print_in_log("Errore durante la comunicazione con il dispositivo:" + str(e))
 
     return client_socket
 

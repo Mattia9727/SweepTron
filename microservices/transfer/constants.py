@@ -2,8 +2,8 @@ import os
 import numpy as np
 import json
 
-data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
-# data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+# data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 settings_path = os.path.join(data_folder, 'config.json')
 
 # Carica le costanti dal file JSON

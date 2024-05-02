@@ -24,7 +24,6 @@ def sensing(ch):
     while True:  # You might want to replace 'True' with a condition to stop the loop
         condition = 4 <= datetime.datetime.now().hour <= 7
         pingToWatchdog(ch)
-        # condition = False  #TODO: provvisorio, da capire perché fallisce comunicazione con coda se passa troppo tempo
         if condition or c.debug_transfer:
             if c.transferedToday == 0:
                 startTransferData(ch)
