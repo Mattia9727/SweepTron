@@ -43,15 +43,16 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
         "dbmm2value": dbmm2value,
         "vmvalue": vmvalue
     }
+    print(json_data)
 
     # Invia la richiesta POST al server Flask
     response = requests.post(c.url, json=json_data)
 
-    # # Verifica lo stato della risposta
-    # if response.status_code == 200:
-    #     print_in_log("Dati inviati correttamente al server.")
-    # else:
-    #     print_in_log("Errore durante l'invio dei dati al server.")
+    # Verifica lo stato della risposta
+    if response.status_code == 200:
+        print_in_log("Dati inviati correttamente al server.")
+    else:
+        print_in_log("Errore durante l'invio dei dati al server.")
     return str(response.status_code)
 
 
@@ -88,15 +89,16 @@ def callback_transfer_normal_data(ch, method, properties, body):
         for line in lines:
             # Dividi la riga in timestamp, freq, dbmm2, vmvalue
             parts = line.split()
-            if len(parts) == 4:
-                timestamp, freq, dbmm2, vmvalue = parts
+            if len(parts) == 3:
+                timestamp, freq, vmvalue = parts
 
                 # Invia i dati al server Flask
                 ok = False
                 for i in range(5):
-                    if(send_data_to_server(timestamp, float(freq), float(dbmm2), float(vmvalue)) == "200"):
+                    if(send_data_to_server(timestamp, float(freq), 0, float(vmvalue)) == "200"):
                         ok=True
                         break
+                    time.sleep(1)
                 if(not ok):
                     file.write(line)
                     emptyfile = False
@@ -147,7 +149,7 @@ def main():
     #TODO: Provvisorio, capire come gestire bene watchdog
     now = datetime.datetime.now()
     delta = datetime.timedelta(hours=3)
-    while (now+delta < datetime.datetime.now()):
+    while (now+delta > datetime.datetime.now()):
         time.sleep(30)
         pingToWatchdog(channel)
     stopToWatchdog(channel)

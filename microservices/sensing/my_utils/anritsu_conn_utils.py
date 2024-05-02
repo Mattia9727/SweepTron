@@ -7,13 +7,13 @@ from .log_utils import print_in_log
 
 # TCP_IP = '160.80.83.142'
 # TCP_IP = '192.168.0.2'
-TCP_IP = '10.0.0.2'
+# TCP_IP = '10.0.0.2'
 # TCP_IP = '192.168.214.70'
-# TCP_IP = 'localhost'          #Per ultraportable
-TCP_PORT = 9001
-# TCP_PORT = 59001              #Per ultraportable
-BUFFER_SIZE = 8192000
-TIMEOUT = 3  # amount of time in s between one command and the following time
+TCP_IP = 'localhost'          #Per ultraportable
+# TCP_PORT = 9001
+TCP_PORT = 59001              #Per ultraportable
+BUFFER_SIZE = 8192
+TIMEOUT = 10  # amount of time in s between one command and the following time
 
 
 def find_device():
@@ -53,15 +53,12 @@ def send_command(conn, message, wait=-1):
 
     except Exception as e:
         print_in_log("Errore durante l'invio dei dati:", str(e))
-
     if wait != -1:
         conn.settimeout(TIMEOUT)
-
 
 def get_message(conn, message, wait=-1):
     if wait != -1:
         conn.settimeout(wait)
-
     # Invia dati al dispositivo
     try:
         conn.send(message.encode())
@@ -70,16 +67,16 @@ def get_message(conn, message, wait=-1):
         recv_message = conn.recv(BUFFER_SIZE)
 
     except Exception as e:
-        print_in_log("Errore durante la ricezione dei dati:", str(e))
+        print_in_log("Errore durante la ricezione dei dati:" + str(e))
         recv_message = get_error(conn)  # TODO: da capire bene cosa fare qui
 
-    if wait != -1:
-        conn.settimeout(TIMEOUT)
     if isinstance(recv_message, bytes):
         try:
             return recv_message.decode("utf-8")
         except UnicodeDecodeError:
             return str(recv_message)
+    if wait != -1:
+        conn.settimeout(TIMEOUT)
     return recv_message
 
 
@@ -93,6 +90,7 @@ def update_error_log(message):
 def get_error(conn):
     while True:
         error = get_message(conn, ':SYSTem:ERRor?\n')
+        if error == None: return
         if error[0] != "0":
             err_split = error.split(",")
             update_error_log(error)
@@ -141,6 +139,8 @@ def setup_for_single_freq(conn,f):
     samples_for_averages_str = ':SENS:AVER:COUN {}\n'.format(c.samples_for_averages)
     send_command(conn, samples_for_averages_str)  # Rolling average number of samples
     send_command(conn, ':TRAC:TYPE RAV\n', c.command_rolling_average_time)  # Rolling average DETECTOR
+    import time
+    time.sleep(10)
 
 
 def get_loc_name_by_geo_info(curr_latitude, curr_longitude, curr_timestamp):
