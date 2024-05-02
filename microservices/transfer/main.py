@@ -43,16 +43,12 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
         "dbmm2value": dbmm2value,
         "vmvalue": vmvalue
     }
-    print(json_data)
 
     # Invia la richiesta POST al server Flask
     response = requests.post(c.url, json=json_data)
 
     # Verifica lo stato della risposta
-    if response.status_code == 200:
-        print_in_log("Dati inviati correttamente al server.")
-    else:
-        print_in_log("Errore durante l'invio dei dati al server.")
+
     return str(response.status_code)
 
 
@@ -72,6 +68,37 @@ def callback_transfer_iq_data(ch, method, properties, body):
     if msg == "OK":
         os.remove(body)
 
+def init_send_simple_data(logfile):
+    logfile_strings = logfile.rsplit(".", 1)
+
+    with open(logfile, 'r') as file:
+        lines = file.readlines()
+    emptyfile = True
+    with open(logfile_strings[0] + "temp." + logfile_strings[1], 'w') as file:
+        for line in lines:
+            # Dividi la riga in timestamp, freq, dbmm2, vmvalue
+            parts = line.split()
+            if len(parts) == 4:
+                timestamp, freq, dbmm2value, vmvalue = parts
+
+                # Invia i dati al server Flask
+                ok = False
+                for i in range(5):
+                    if (send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue)) == "200"):
+                        ok = True
+                        break
+                    time.sleep(1)
+                if (not ok):
+                    file.write(line)
+                    emptyfile = False
+    os.remove(logfile)
+    if emptyfile:
+        os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
+        print_in_log("Trasferimento completato correttamente.")
+    else:
+        os.rename(logfile_strings[0] + "temp." + logfile_strings[1], logfile)
+        print_in_log("Trasferimento completato, ma qualche entry non è stata inviata.")
+
 
 def callback_transfer_normal_data(ch, method, properties, body):
     print_in_log("Callback transfer normal attivato")
@@ -79,39 +106,26 @@ def callback_transfer_normal_data(ch, method, properties, body):
     if (check_server_reachability == False):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
+    filename = body.decode("utf-8")
+    init_send_simple_data(filename)
 
-    body_strings = body.decode("utf-8").rsplit(".",1)
-
-    with open(body, 'r') as file:
-        lines = file.readlines()
-    emptyfile = True
-    with open(body_strings[0]+"temp."+body_strings[1], 'w') as file:
-        for line in lines:
-            # Dividi la riga in timestamp, freq, dbmm2, vmvalue
-            parts = line.split()
-            if len(parts) == 3:
-                timestamp, freq, vmvalue = parts
-
-                # Invia i dati al server Flask
-                ok = False
-                for i in range(5):
-                    if(send_data_to_server(timestamp, float(freq), 0, float(vmvalue)) == "200"):
-                        ok=True
-                        break
-                    time.sleep(1)
-                if(not ok):
-                    file.write(line)
-                    emptyfile = False
-    os.remove(body)
-    if emptyfile:
-        os.remove(body_strings[0]+"temp."+body_strings[1])
-    else:
-        os.rename(body_strings[0]+"temp."+body_strings[1],body)
+    directory = c.data_folder+"\\measures"
+    for file in os.listdir(directory):
+        if file.endswith('.txt'):
+            try:
+                init_send_simple_data(directory+"\\"+file)
+            except FileNotFoundError:
+                pass
 
 
-    ch.basic_publish(exchange='',
+    try:
+        ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body=("normal_OK").encode("utf-8"))
+    except pika.exceptions.StreamLostError:
+        ch.basic_publish(exchange='',
+                         routing_key='T-S',
+                         body=("normal_OK").encode("utf-8"))
 
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
@@ -138,7 +152,8 @@ def start_consuming_thread():
     thread.start()
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=600,
+                                       blocked_connection_timeout=300))
     channel = connection.channel()
     if (4 < datetime.datetime.now().hour < 7 and not c.debug_transfer):
         stopToWatchdog(channel)
@@ -153,7 +168,7 @@ def main():
         time.sleep(30)
         pingToWatchdog(channel)
     stopToWatchdog(channel)
-
+    connection.close()
     return
 
 if __name__ == "__main__":

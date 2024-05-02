@@ -1,6 +1,6 @@
 import json
 
-# data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+#data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 settings_path = data_folder+"\\"+'config.json'
 
@@ -23,3 +23,4 @@ transfer_activity = False
 pika_params = constants["pika_params"]
 service_log_file = data_folder+"\\"+ constants["watchdog_log_file"]
 
+disable_restart = constants["disable_restart"]

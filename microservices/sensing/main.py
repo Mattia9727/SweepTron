@@ -18,7 +18,6 @@ def sensing(ch):
     # find_device()
     conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)
-
     today = -1
     # Monitoring of all DL frequencies
     while True:  # You might want to replace 'True' with a condition to stop the loop
@@ -32,13 +31,10 @@ def sensing(ch):
         else:
             if today != datetime.datetime.today().day:
                 c.transferedToday = 0
-
         if c.device_type == "MS2760A":
             measureMS2760A(ch, conn, location_name)
         elif c.device_type == "MS2090A":
-            data_folder = os.path.join(os.environ['USERPROFILE'], 'Desktop','SweeptronData')
-            settings_path = os.path.join(data_folder,'config.json')
-            with open(settings_path) as f:
+            with open(c.settings_path) as f:
                 constants = json.load(f)
             c.iq_mode = constants["iq_mode"]
             if c.iq_mode == 0:
@@ -48,7 +44,7 @@ def sensing(ch):
 
 
 def consume_thread():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=10))
     channel = connection.channel()
 
     channel.queue_declare(queue='T-S')
@@ -73,9 +69,11 @@ def start_consuming_thread():
 
 def sensing_init():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+
     channel = connection.channel()
 
     channel.queue_declare(queue='S-P')
+
     channel.queue_declare(queue='S-T')
     channel.queue_declare(queue='S-W')
     try:

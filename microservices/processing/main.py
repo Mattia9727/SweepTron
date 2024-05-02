@@ -51,10 +51,12 @@ def start_consuming_thread():
 
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=600,
+                                       blocked_connection_timeout=300))
     channel = connection.channel()
 
-    if (4<datetime.datetime.now().hour<7):
+    if (4<datetime.datetime.now().hour<7 and not c.debug_transfer):
         stopToWatchdog(channel)
         return
 
@@ -64,10 +66,11 @@ def main():
     # TODO: Provvisorio, capire come gestire bene watchdog
     now = datetime.datetime.now()
     delta = datetime.timedelta(hours=3)
-    while (now + delta < datetime.datetime.now()):
+    while (now + delta > datetime.datetime.now()):
         time.sleep(30)
         pingToWatchdog(channel)
     stopToWatchdog(channel)
+    connection.close()
 
     return
 

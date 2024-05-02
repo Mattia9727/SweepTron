@@ -1,4 +1,5 @@
 import datetime
+import math
 import os
 
 from math import sqrt
@@ -51,7 +52,7 @@ def interp_af(freqs):
 def calculate_vm_from_dbm(dbm,af):
     return (1/sqrt(20))*10**((float(dbm)+float(af))/20)
 
-def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker,freq_start):
+def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker, freq_start):
     max_marker = -200
     calc_min_marker = 200
 
@@ -259,6 +260,10 @@ def dbmm2_to_vm(value):
     value_in_vm = 10**((value_in_dbmuvm-120)/20)
     return value_in_vm
 
+def vm_to_dbmm2(value_in_vm):
+    value_in_dbmuvm = 20 * math.log10(value_in_vm) + 120
+    value_in_dbmm2 = value_in_dbmuvm - 115.8
+    return value_in_dbmm2
 
 def measureMS2090A(ch, conn, location_name):
     measured_emf_matrix_base_station = np.zeros((c.num_frequencies, c.number_samples_chp))
@@ -308,12 +313,12 @@ def measureMS2090A(ch, conn, location_name):
                 time.sleep(0.01)
             c.lock_file = True
             log_file = open(c.log_file, 'a')
-            if c.print_debug > 0:
-                log_file.write('Timestamp: {} - Frequency: {} - Channel power in DBm/m2: {} - Channel power in V/m: {}\n'.format(
-                    datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
-                    measured_emf_matrix_base_station[f, i], emf_in_vm))
-            else:
-                log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
+            # if c.print_debug > 0:
+            #     log_file.write('Timestamp: {} - Frequency: {} - Channel power in DBm/m2: {} - Channel power in V/m: {}\n'.format(
+            #         datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
+            #         measured_emf_matrix_base_station[f, i], emf_in_vm))
+            # else:
+            log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
                                                    measured_emf_matrix_base_station[f, i], emf_in_vm))
 
             log_file.close()
@@ -323,10 +328,11 @@ def measureMS2090A(ch, conn, location_name):
             time.sleep(c.inter_sample_time)
 
 
-        plot_measure(measured_emf_matrix_base_station, f)
+        #OLD
+        #plot_measure(measured_emf_matrix_base_station, f)
+        #location_name_mat = '{}.mat'.format(location_name)
+        #np.save(location_name_mat, measured_emf_matrix_base_station)
 
-        location_name_mat = '{}.mat'.format(location_name)
-        np.save(location_name_mat, measured_emf_matrix_base_station)
         c.transmission_freq_used = False
 
     # Close the log files
@@ -386,12 +392,13 @@ def measureMS2760A(ch, conn, location_name):
                 i-=1
                 continue
             emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.antenna_factor[f])
+            emf_measured_dbmm2 = vm_to_dbmm2(emf_measured_vm)
             measured_emf_matrix_base_station[f, i] = float(emf_measured_vm)
             time_array[f, i] = datetime.datetime.now()
 
             if c.print_debug > 0:
-                print_in_log('{} - {} - {}'.format(
-                            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
+                print_in_log('{} - {} - {} - {}'.format(
+                            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],emf_measured_dbmm2,
                             measured_emf_matrix_base_station[f, i]))
             if c.lock_file == True:
                 time.sleep(0.01)
@@ -402,7 +409,7 @@ def measureMS2760A(ch, conn, location_name):
             #         datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #         measured_emf_matrix_base_station[f, i]))
             # else:
-            log_file.write('{} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
+            log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], emf_measured_dbmm2,
                                                measured_emf_matrix_base_station[f, i]))
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
@@ -411,11 +418,11 @@ def measureMS2760A(ch, conn, location_name):
             c.lock_file = False
             time.sleep(c.inter_sample_time)
 
-        plot_measure(measured_emf_matrix_base_station, f)
-
-        location_name_mat = '{}.mat'.format(location_name)
-        np.save(location_name_mat, measured_emf_matrix_base_station)
-        c.transmission_freq_used = False
+        #OLD
+        # plot_measure(measured_emf_matrix_base_station, f)
+        # location_name_mat = '{}.mat'.format(location_name)
+        # np.save(location_name_mat, measured_emf_matrix_base_station)
+        # c.transmission_freq_used = False
 
 
     # Close the log files

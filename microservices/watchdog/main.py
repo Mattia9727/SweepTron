@@ -49,8 +49,9 @@ def callback_transfer(ch, method, properties, body):
 
 def main():
     print_in_log("[Watchdog] Start service")
-    start_restarter_thread()
-    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
+    if (not c.disable_restart):
+        start_restarter_thread()
+    connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=10))
     channel = connection.channel()
 
     channel.queue_declare(queue='S-W')

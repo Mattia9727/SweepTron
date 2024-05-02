@@ -21,13 +21,13 @@ def find_device():
     client_socket.settimeout(TIMEOUT)
     try:
         # Connessione al dispositivo
-        client_socket.connect((TCP_IP, TCP_PORT))
+        client_socket.connect((c.spectrum_analyzer_ip, c.spectrum_analyzer_port))
         print_in_log(get_message(client_socket, '*IDN?\n'))
     except Exception as e:
-        print_in_log("Can't find any device in IP {}, port {} with error:".format(TCP_IP, TCP_PORT) + str(e))
+        print_in_log("Can't find any device in IP {}, port {} with error:".format(c.spectrum_analyzer_ip, c.spectrum_analyzer_port) + str(e))
         exit(0)
 
-    print_in_log("Device found in IP {}, port {}".format(TCP_IP, TCP_PORT))
+    print_in_log("Device found in IP {}, port {}".format(c.spectrum_analyzer_ip, c.spectrum_analyzer_port))
     client_socket.close()
 
 
@@ -37,7 +37,7 @@ def connect_to_device():
     client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, BUFFER_SIZE)
     try:
         # Connessione al dispositivo
-        client_socket.connect((TCP_IP, TCP_PORT))
+        client_socket.connect((c.spectrum_analyzer_ip, c.spectrum_analyzer_port))
 
     except Exception as e:
         print_in_log("Errore durante la comunicazione con il dispositivo:" + str(e))

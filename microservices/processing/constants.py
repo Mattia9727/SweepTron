@@ -2,7 +2,7 @@ import os
 import numpy as np
 import json
 
-# data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+#data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 settings_path = os.path.join(data_folder, 'config.json')
 
@@ -11,6 +11,7 @@ with open(settings_path) as f:
     constants = json.load(f)
 
 # Estrai le costanti
+debug_transfer = constants["debug_transfer"]
 print_debug = constants["print_debug"]
 iq_mode = constants["iq_mode"]
 grafici_dir = data_folder + "\\" + constants["grafici_dir"]

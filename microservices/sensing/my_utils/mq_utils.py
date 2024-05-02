@@ -67,13 +67,16 @@ def sendNormalCapture(ch):
         c.lock_file = True
         os.rename(c.log_file, new_name)
         c.lock_file = False
+        ch.basic_publish(exchange='',
+                         routing_key='S-T',
+                         body=new_name)
+    except FileNotFoundError:
+        print_in_log("Transfer started but no captures found. Stop transfer phase...")
     except FileExistsError:
         print_in_log("Something strange happened (datetime_now?)")
         exit(0)
 
-    ch.basic_publish(exchange='',
-                     routing_key='S-T',
-                     body=new_name)
+
 
 
 def startTransferData(ch):
