@@ -29,10 +29,10 @@ def send_data(file_path):
         files = {'file': (file_path, file)}
         try:
             response = requests.post(c.url, files=files)
-            return("OK")
+            return response.status_code
         except requests.exceptions.ConnectionError:
             print_in_log("Server non trovato. Verificare che il server sia acceso per il trasferimento.")
-            return("errore")
+            return "errore"
 
 
 def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
@@ -45,7 +45,7 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
     }
 
     # Invia la richiesta POST al server Flask
-    response = requests.post(c.url, json=json_data)
+    response = requests.post(c.error_url, json=json_data)
 
     # Verifica lo stato della risposta
 
@@ -69,6 +69,7 @@ def callback_transfer_iq_data(ch, method, properties, body):
         os.remove(body)
 
 def init_send_simple_data(logfile):
+    print_in_log("Inizio trasferimento file "+logfile)
     logfile_strings = logfile.rsplit(".", 1)
 
     with open(logfile, 'r') as file:
@@ -91,12 +92,12 @@ def init_send_simple_data(logfile):
                 if (not ok):
                     file.write(line)
                     emptyfile = False
-    os.remove(logfile)
+    #os.remove(logfile)
     if emptyfile:
-        os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
+        #os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
         print_in_log("Trasferimento completato correttamente.")
     else:
-        os.rename(logfile_strings[0] + "temp." + logfile_strings[1], logfile)
+        #os.rename(logfile_strings[0] + "temp." + logfile_strings[1], logfile)
         print_in_log("Trasferimento completato, ma qualche entry non è stata inviata.")
 
 
@@ -108,14 +109,15 @@ def callback_transfer_normal_data(ch, method, properties, body):
         return
     filename = body.decode("utf-8")
     init_send_simple_data(filename)
+    send_data(c.error_log_file)
 
-    directory = c.data_folder+"\\measures"
-    for file in os.listdir(directory):
-        if file.endswith('.txt'):
-            try:
-                init_send_simple_data(directory+"\\"+file)
-            except FileNotFoundError:
-                pass
+    # directory = c.data_folder+"\\measures"
+    # for file in os.listdir(directory):
+    #     if file.endswith('.txt'):
+    #         try:
+    #             init_send_simple_data(directory+"\\"+file)
+    #         except FileNotFoundError:
+    #             pass
 
 
     try:
@@ -124,8 +126,8 @@ def callback_transfer_normal_data(ch, method, properties, body):
                      body=("normal_OK").encode("utf-8"))
     except pika.exceptions.StreamLostError:
         ch.basic_publish(exchange='',
-                         routing_key='T-S',
-                         body=("normal_OK").encode("utf-8"))
+                     routing_key='T-S',
+                     body=("normal_OK").encode("utf-8"))
 
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
@@ -155,7 +157,7 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=600,
                                        blocked_connection_timeout=300))
     channel = connection.channel()
-    if (4 < datetime.datetime.now().hour < 7 and not c.debug_transfer):
+    if (not (4 < datetime.datetime.now().hour < 7) and not c.debug_transfer):
         stopToWatchdog(channel)
         return
     print_in_log("Transfer microservice ON")

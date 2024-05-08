@@ -53,6 +53,7 @@ def send_command(conn, message, wait=-1):
 
     except Exception as e:
         print_in_log("Errore durante l'invio dei dati:", str(e))
+
     if wait != -1:
         conn.settimeout(TIMEOUT)
 
@@ -83,7 +84,7 @@ def get_message(conn, message, wait=-1):
 def update_error_log(message):
     error_log_file_name = c.error_log_file
     error_log_file = open(error_log_file_name, 'a')
-    current_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+    current_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
     error_log_file.write(str(format(current_timestamp)) + " " + message + "\n")
 
 

@@ -55,6 +55,8 @@ def calculate_vm_from_dbm(dbm,af):
 def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker, freq_start):
     max_marker = -200
     calc_min_marker = 200
+    if_gain_margin = 15
+    if_gain_threshold = -40
 
     no_error = False
     while (not no_error):
@@ -111,6 +113,11 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     if scale_div<1: scale_div=1
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(int(scale_div))
     send_command(conn,str_scale_div)  # automatic scale div setting
+
+    if int(max_marker) + if_gain_margin < if_gain_threshold:
+        send_command(conn,":POW:IF:GAIN:STAT ON\n")
+    else:
+        send_command(conn, ":POW:IF:GAIN:STAT OFF\n")
 
     return reference_level, scale_div
 
@@ -353,8 +360,6 @@ def measureMS2760A(ch, conn, location_name):
     # # Create and open a CSV file to record data
     # csv_file = open(os.path.join(c.log_file + '.csv'), 'a')
 
-    curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
-
     # if c.print_debug > 0:
     #     log_file = open(c.log_file, 'a')
     #     log_file.write('Timestamp di esecuzione: {}\n'.format(curr_timestamp))
@@ -364,7 +369,7 @@ def measureMS2760A(ch, conn, location_name):
         pingToWatchdog(ch)
 
 
-        curr_timestamp = datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')
+        curr_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         print_in_log("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
 
         c.transmission_freq_used = False

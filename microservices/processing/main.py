@@ -56,7 +56,7 @@ def main():
                                        blocked_connection_timeout=300))
     channel = connection.channel()
 
-    if (4<datetime.datetime.now().hour<7 and not c.debug_transfer):
+    if (not(4<datetime.datetime.now().hour<7) and not c.debug_transfer):
         stopToWatchdog(channel)
         return
 
