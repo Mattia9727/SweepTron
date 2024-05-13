@@ -56,11 +56,12 @@ def main():
                                        blocked_connection_timeout=300))
     channel = connection.channel()
 
-    if (not(4<datetime.datetime.now().hour<7) and not c.debug_transfer):
+    if (not(4<=datetime.datetime.now().hour<7) and not c.debug_transfer):
         stopToWatchdog(channel)
+        print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
         return
 
-    print_in_log("Processing microservice ON")
+    print_in_log("Processing microservice ON (" + str(datetime.datetime.now().hour)+")")
     start_consuming_thread()
 
     # TODO: Provvisorio, capire come gestire bene watchdog

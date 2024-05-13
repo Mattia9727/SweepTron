@@ -39,5 +39,6 @@ debug_transfer = constants["debug_transfer"]
 
 server_ip = constants["server_ip"]
 url = constants["url"]
+error_url = constants["error_url"]
 
 location = constants["location"]
