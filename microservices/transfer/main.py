@@ -45,7 +45,7 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
     }
 
     # Invia la richiesta POST al server Flask
-    response = requests.post(c.error_url, json=json_data)
+    response = requests.post(c.url, json=json_data)
 
     # Verifica lo stato della risposta
 
