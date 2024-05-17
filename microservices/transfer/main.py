@@ -85,9 +85,12 @@ def init_send_simple_data(logfile):
                 # Invia i dati al server Flask
                 ok = False
                 for i in range(5):
-                    if (send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue)) == "200"):
+                    response = send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue))
+                    if (response == "200"):
                         ok = True
                         break
+                    else:
+                        print_in_log(response)
                     time.sleep(1)
                 if (not ok):
                     file.write(line)
@@ -103,7 +106,7 @@ def init_send_simple_data(logfile):
 
 def callback_transfer_normal_data(ch, method, properties, body):
     print_in_log("Callback transfer normal attivato")
-
+    c.isTransfering = 1
     if (check_server_reachability == False):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
@@ -128,6 +131,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
         ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body=("normal_OK").encode("utf-8"))
+    c.isTransfering = 0
 
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
@@ -168,7 +172,7 @@ def main():
     #TODO: Provvisorio, capire come gestire bene watchdog
     now = datetime.datetime.now()
     delta = datetime.timedelta(hours=3)
-    while (now+delta > datetime.datetime.now()):
+    while (now+delta > datetime.datetime.now() or c.isTransfering):
         time.sleep(30)
         pingToWatchdog(channel)
     stopToWatchdog(channel)
