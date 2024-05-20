@@ -10,7 +10,8 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     isTransfering = device_type = debug_transfer = server_ip = url = error_url = location = lock_file = \
     spectrum_analyzer_ip = spectrum_analyzer_port = antenna_file = af_keysight = initial_reference_level = \
     y_ticks = command_rolling_average_time = inter_sample_time = number_samples_chp = samples_for_averages = \
-    iq_num_frequencies = frequency_center = iq_frequency_center = minimum_level_no_pre_amp = \
+    frequency_start = frequency_stop = iq_frequency_start = iq_frequency_stop = \
+    num_frequencies = iq_num_frequencies = frequency_center = iq_frequency_center = minimum_level_no_pre_amp = \
     initial_guard_amplitude = time_search_for_adjust_ref_level_scale = iq_length_value = iq_length_unit = \
     iq_bits = None
 
@@ -23,7 +24,8 @@ def update_all():
         isTransfering, device_type, debug_transfer, server_ip, url, error_url, location, lock_file, \
         spectrum_analyzer_ip, spectrum_analyzer_port, antenna_file, af_keysight, initial_reference_level, y_ticks, \
         command_rolling_average_time, inter_sample_time, number_samples_chp, samples_for_averages, iq_num_frequencies, \
-        frequency_center, iq_frequency_center, minimum_level_no_pre_amp, initial_guard_amplitude, \
+        frequency_start, frequency_stop, iq_frequency_start, iq_frequency_stop, \
+        num_frequencies, frequency_center, iq_frequency_center, minimum_level_no_pre_amp, initial_guard_amplitude, \
         time_search_for_adjust_ref_level_scale, iq_length_value, iq_length_unit, iq_bits
 
     settings_path = data_folder+"\\"+'config.json'
