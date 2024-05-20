@@ -326,7 +326,7 @@ def measure_rack(ch, conn, location_name):
             #         measured_emf_matrix_base_station[f, i], emf_in_vm))
             # else:
             log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
-                                                   round(measured_emf_matrix_base_station[f, i],3), round(emf_in_vm),3))
+                                                   round(measured_emf_matrix_base_station[f, i],3), round(emf_in_vm,3)))
 
             log_file.close()
             c.lock_file = False
@@ -415,7 +415,7 @@ def measure_ultraportable(ch, conn, location_name):
             #         measured_emf_matrix_base_station[f, i]))
             # else:
             log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], round(emf_measured_dbmm2,3),
-                                               round(measured_emf_matrix_base_station[f, i]),3))
+                                               round(measured_emf_matrix_base_station[f, i],3)))
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))
