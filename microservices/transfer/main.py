@@ -106,13 +106,15 @@ def init_send_simple_data(logfile):
 
 def callback_transfer_normal_data(ch, method, properties, body):
     print_in_log("Callback transfer normal attivato")
-    c.isTransfering = 1
     if (check_server_reachability == False):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
     filename = body.decode("utf-8")
+
+    c.isTransfering = 1
     init_send_simple_data(filename)
     send_data(c.error_log_file)
+    c.isTransfering = 0
 
     # directory = c.data_folder+"\\measures"
     # for file in os.listdir(directory):
@@ -131,7 +133,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
         ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body=("normal_OK").encode("utf-8"))
-    c.isTransfering = 0
+
 
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))

@@ -6,7 +6,7 @@ import time
 import pika
 
 from my_utils.log_utils import print_in_log
-from my_utils.sensing_utils import measureMS2760A, measureMS2090A, interp_af, iq_measureMS2090A
+from my_utils.sensing_utils import measure_ultraportable, measure_rack, interp_af, iq_measure_rack
 from my_utils.mq_utils import callbackTransferData, startTransferData, pingToWatchdog, stopToWatchdog
 from my_utils.anritsu_conn_utils import general_setup_connection_to_device
 
@@ -20,9 +20,10 @@ def sensing(ch):
     c.antenna_factor = interp_af(c.frequency_center)
     today = -1
     # Monitoring of all DL frequencies
-    while True:  # You might want to replace 'True' with a condition to stop the loop
-        condition = 4 <= datetime.datetime.now().hour <= 7
+    while True:
         pingToWatchdog(ch)
+
+        condition = (4 <= datetime.datetime.now().hour < 7)
         if condition or c.debug_transfer:
             if c.transferedToday == 0 or c.debug_transfer:
                 startTransferData(ch)
@@ -31,16 +32,15 @@ def sensing(ch):
         else:
             if today != datetime.datetime.today().day:
                 c.transferedToday = 0
+        c.update_all()
         if c.device_type == "MS2760A":
-            measureMS2760A(ch, conn, location_name)
+            measure_ultraportable(ch, conn, location_name)
         elif c.device_type == "MS2090A":
-            with open(c.settings_path) as f:
-                constants = json.load(f)
-            c.iq_mode = constants["iq_mode"]
+
             if c.iq_mode == 0:
-                measureMS2090A(ch, conn, location_name)
+                measure_rack(ch, conn, location_name)
             else:
-                iq_measureMS2090A(ch, conn, location_name)
+                iq_measure_rack(ch, conn, location_name)
 
 
 def consume_thread():

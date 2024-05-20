@@ -28,7 +28,6 @@ def update_all():
 
     settings_path = data_folder+"\\"+'config.json'
 
-
     # Carica le costanti dal file JSON
     with open(settings_path) as f:
         constants = json.load(f)

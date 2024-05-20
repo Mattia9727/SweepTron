@@ -140,7 +140,7 @@ def plot_measure(measured_emf_matrix_base_station,f):
     plt.savefig(os.path.join(c.grafici_dir, plot_file))
     plt.clf()
 
-def iq_measureMS2090A(ch, conn, location_name):
+def iq_measure_rack(ch, conn, location_name):
     #print(get_message(conn, "*IDN?\n"))
     # Set Frequency
     wait_msecs = 300000
@@ -272,7 +272,7 @@ def vm_to_dbmm2(value_in_vm):
     value_in_dbmm2 = value_in_dbmuvm - 115.8
     return value_in_dbmm2
 
-def measureMS2090A(ch, conn, location_name):
+def measure_rack(ch, conn, location_name):
     measured_emf_matrix_base_station = np.zeros((c.num_frequencies, c.number_samples_chp))
     time_array = np.empty((c.num_frequencies, c.number_samples_chp), dtype=object)
 
@@ -346,7 +346,7 @@ def measureMS2090A(ch, conn, location_name):
     # csv_file.close()
     # Add code to stop the loop or exit gracefully if needed
 
-def measureMS2760A(ch, conn, location_name):
+def measure_ultraportable(ch, conn, location_name):
     measured_emf_matrix_base_station = np.zeros((c.num_frequencies, c.number_samples_chp))
     time_array = np.empty((c.num_frequencies, c.number_samples_chp), dtype=object)
 
