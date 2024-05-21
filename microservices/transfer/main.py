@@ -3,6 +3,8 @@ import os
 import socket
 import threading
 import time
+import traceback
+
 import pika
 import requests
 import sys
@@ -111,10 +113,16 @@ def callback_transfer_normal_data(ch, method, properties, body):
         return
     filename = body.decode("utf-8")
 
-    c.isTransfering = 1
-    init_send_simple_data(filename)
-    send_data(c.error_log_file)
-    c.isTransfering = 0
+    c.isTransfering = True
+    try:
+        init_send_simple_data(filename)
+        send_data(c.error_log_file)
+    except Exception:
+        print_in_log("Errore in fase di trasmissione, vedere log di transfer.")
+        with open(c.service_log_file.rsplit(".",1)[0] + ".log", "a") as logfile:
+            traceback.print_exc(file=logfile)
+    finally:
+        c.isTransfering = False
 
     # directory = c.data_folder+"\\measures"
     # for file in os.listdir(directory):
