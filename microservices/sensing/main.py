@@ -24,19 +24,20 @@ def sensing(ch):
         pingToWatchdog(ch)
 
         condition = (4 <= datetime.datetime.now().hour < 7)
-        if condition or c.debug_transfer:
-            if c.transferedToday == 0 or c.debug_transfer:
-                startTransferData(ch)
-            c.transferedToday = 1
-            today = datetime.datetime.today().day
+        if condition or c.debug_transfer:                               #Condizione di trasferimento, modificabile
+            if c.transferedToday == 0 or c.debug_transfer:              #Se oggi il trasferimento non è avvenuto
+                startTransferData(ch)                                   #Avvia trasferimento
+            c.transferedToday = 1                                       #Flag che segna l'avvenuto trasferimento di oggi
+            today = datetime.datetime.today().day                       #Aggiorno numero del giorno in cui è avvenuto il trasferimento
         else:
-            if today != datetime.datetime.today().day:
-                c.transferedToday = 0
-        c.update_all()
-        if c.device_type == "MS2760A":
-            measure_ultraportable(ch, conn, location_name)
-        elif c.device_type == "MS2090A":
+            if today != datetime.datetime.today().day:                  #Se è cambiato il giorno
+                c.transferedToday = 0                                   #Si può di nuovo avviare il trasferimento
+        c.update_all()                                                  #Ricarica configurazione da json
 
+
+        if c.device_type == "MS2760A":                                  #In base al tipo di analizzatore e al tipo di
+            measure_ultraportable(ch, conn, location_name)              #cattura lancia la funzione corrispondente
+        elif c.device_type == "MS2090A":
             if c.iq_mode == 0:
                 measure_rack(ch, conn, location_name)
             else:

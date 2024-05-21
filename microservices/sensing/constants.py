@@ -78,7 +78,6 @@ def update_all():
     transmission_freq = constants["transmission_freq"]
     transmission_freq_used = constants["transmission_freq_used"]
 
-    transferedToday = constants["transferedToday"]
     isTransfering = constants["isTransfering"]
 
     device_type = constants["device_type"]

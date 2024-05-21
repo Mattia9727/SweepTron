@@ -109,7 +109,7 @@ def get_error(conn):
         else:
             break
 
-def setup_anritsu_device_MS2090A(conn):
+def setup_anritsu_device_rack(conn):
     send_command(conn,':MODE SPEC\n')
     send_command(conn,':CONFigure:CHPower\n')
     send_command(conn,':FSTRength:STATe 1\n')
@@ -119,7 +119,7 @@ def setup_anritsu_device_MS2090A(conn):
     send_command(conn,':POW:RF:ATT 0 DB\n')  # Set attenuation to 0 dB
     send_command(conn,':POW:RF:GAIN:STAT OFF\n')  # Turn off pre-amplifier for initial setting
 
-def setup_anritsu_device_MS2760A(conn):
+def setup_anritsu_device_ultraportable(conn):
     send_command(conn,':CONFigure:CHPower\n')
 
 def setup_for_single_freq(conn,f):
@@ -171,10 +171,10 @@ def general_setup_connection_to_device():
     find_device()
     conn = connect_to_device()
     location_name = ""
-    if c.device_type == "MS2090A":
+    if c.device_type == "MS2090A" or c.device_type == "rack":
         location_name = get_gps_info(conn)
-        setup_anritsu_device_MS2090A(conn)
-    elif c.device_type == "MS2760A":
-        setup_anritsu_device_MS2760A(conn)
+        setup_anritsu_device_rack(conn)
+    elif c.device_type == "MS2760A" or c.device_type == "ultraportable":
+        setup_anritsu_device_ultraportable(conn)
 
     return conn, location_name

@@ -393,6 +393,7 @@ def measure_ultraportable(ch, conn, location_name):
             if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
                 print_in_log("Problema valore CHP, reset connessione e riprovo misurazione...")
                 conn.close()
+                conn = None
                 conn, _ = general_setup_connection_to_device()
                 i-=1
                 continue
