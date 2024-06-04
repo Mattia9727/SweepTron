@@ -53,6 +53,19 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
 
     return str(response.status_code)
 
+def send_error_to_server(line):
+    json_data = {
+        "location": c.location,  # Sostituisci con il tuo luogo
+        "description": line,
+    }
+
+    # Invia la richiesta POST al server Flask
+    response = requests.post(c.error_url, json=json_data)
+
+    # Verifica lo stato della risposta
+
+    return str(response.status_code)
+
 
 
 
@@ -70,24 +83,40 @@ def callback_transfer_iq_data(ch, method, properties, body):
     if msg == "OK":
         os.remove(body)
 
-def init_send_simple_data(logfile):
+def init_send_simple_data(logfile,transfering_error_log):
     print_in_log("Inizio trasferimento file "+logfile)
     logfile_strings = logfile.rsplit(".", 1)
 
     with open(logfile, 'r') as file:
         lines = file.readlines()
     emptyfile = True
+
     with open(logfile_strings[0] + "temp." + logfile_strings[1], 'w') as file:
         for line in lines:
-            # Dividi la riga in timestamp, freq, dbmm2, vmvalue
-            parts = line.split()
-            if len(parts) == 4:
-                timestamp, freq, dbmm2value, vmvalue = parts
+            if not transfering_error_log:
+                # Dividi la riga in timestamp, freq, dbmm2, vmvalue
+                parts = line.split()
+                if len(parts) == 4:
+                    timestamp, freq, dbmm2value, vmvalue = parts
 
+                    # Invia i dati al server Flask
+                    ok = False
+                    for i in range(5):
+                        response = send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue))
+                        if (response == "200"):
+                            ok = True
+                            break
+                        else:
+                            print_in_log(response)
+                        time.sleep(1)
+                    if (not ok):
+                        file.write(line)
+                        emptyfile = False
+            else:
                 # Invia i dati al server Flask
                 ok = False
                 for i in range(5):
-                    response = send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue))
+                    response = send_error_to_server(line)
                     if (response == "200"):
                         ok = True
                         break
@@ -97,6 +126,9 @@ def init_send_simple_data(logfile):
                 if (not ok):
                     file.write(line)
                     emptyfile = False
+
+
+
     #os.remove(logfile)
     if emptyfile:
         #os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
@@ -112,11 +144,14 @@ def callback_transfer_normal_data(ch, method, properties, body):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
     filename = body.decode("utf-8")
-
+    if filename.startswith(c.error_log_file[:-4]):
+        print_in_log("Trasferendo error log...")
+        transfering_error_log = True
+    else:
+        transfering_error_log = False
     c.isTransfering = True
     try:
-        init_send_simple_data(filename)
-        send_data(c.error_log_file)
+        init_send_simple_data(filename, transfering_error_log)
     except Exception:
         print_in_log("Errore in fase di trasmissione, vedere log di transfer.")
         with open(c.service_log_file.rsplit(".",1)[0] + ".log", "a") as logfile:
@@ -171,23 +206,25 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=600,
                                                                    blocked_connection_timeout=300))
     channel = connection.channel()
-    if (not (4 <= datetime.datetime.now().hour < 7) and not c.debug_transfer):
-        stopToWatchdog(channel)
-        connection.close()
-        print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
-        return
+
+    ### Il blocco di codice successivo è commentato perché transfer deve essere sempre attivo, al fine di trasferire
+    ### i dati di log di errore in qualsiasi momento.
+    #if (not (4 <= datetime.datetime.now().hour < 7) and not c.debug_transfer):
+    #    stopToWatchdog(channel)
+    #    connection.close()
+    #    print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
+    #    return
+
     print_in_log("Transfer microservice ON (" + str(datetime.datetime.now().hour)+")")
     start_consuming_thread()
 
-    #TODO: Provvisorio, capire come gestire bene watchdog
-    now = datetime.datetime.now()
-    delta = datetime.timedelta(hours=3)
-    while (now+delta > datetime.datetime.now() or c.isTransfering):
-        time.sleep(30)
-        pingToWatchdog(channel)
-    stopToWatchdog(channel)
-    connection.close()
-    return
+    try:
+        while (True):
+            time.sleep(30)
+            pingToWatchdog(channel)
+    except Exception:
+        connection.close()
+        stopToWatchdog(channel)
 
 if __name__ == "__main__":
     main()
