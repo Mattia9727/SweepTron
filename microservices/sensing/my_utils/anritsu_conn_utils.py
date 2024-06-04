@@ -96,7 +96,7 @@ def get_error(conn):
             err_split = error.split(",")
             update_error_log(error)
 
-            # TODO: Gestione errori Anritsu
+            # TODO: Gestione errori Anritsu se necessario
 
             if any(err_split[0] == i for i in range(-100, -200)):  # Command error (invalid character, syntax error, ...)
                 pass

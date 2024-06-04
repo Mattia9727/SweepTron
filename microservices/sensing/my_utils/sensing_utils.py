@@ -56,7 +56,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     max_marker = -200
     calc_min_marker = 200
     if_gain_margin = 15
-    if_gain_threshold = -40
+    if_gain_threshold = -35
 
     no_error = False
     while (not no_error):
@@ -114,10 +114,11 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(int(scale_div))
     send_command(conn,str_scale_div)  # automatic scale div setting
 
-    if int(max_marker) + if_gain_margin < if_gain_threshold:
-        send_command(conn,":POW:IF:GAIN:STAT ON\n")
-    else:
-        send_command(conn, ":POW:IF:GAIN:STAT OFF\n")
+    if c.device_type == "MS2760A" or c.device_type == "ultraportable":
+        if int(max_marker) + if_gain_margin < if_gain_threshold:
+            send_command(conn,":POW:IF:GAIN:STAT ON\n")
+        else:
+            send_command(conn, ":POW:IF:GAIN:STAT OFF\n")
 
     return reference_level, scale_div
 
@@ -141,42 +142,33 @@ def plot_measure(measured_emf_matrix_base_station,f):
     plt.clf()
 
 def iq_measure_rack(ch, conn, location_name):
-    #print(get_message(conn, "*IDN?\n"))
-    # Set Frequency
-    wait_msecs = 300000
+
     import pyvisa as visa
-    from timeit import default_timer as timer
     rm = visa.ResourceManager()
     spa = rm.open_resource('TCPIP::10.0.0.2::9001::SOCKET')
     spa.timeout = 10000      # Set Timeout to a value ighter than Capture time
     spa.read_termination = '\n'
     spa.write_termination = '\n'
     spa.chunk_size = 2048
-    #print(spa.query("*IDN?"))
-    #data = spa.write("*RST")
-    #time.sleep(10)
-    #print(get_message(conn, "*IDN?\n"))
 
     for f in range(c.iq_num_frequencies):
         pingToWatchdog(ch)
         print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
-        data = spa.write(":SENS:FREQ:START {} MHz".format(c.iq_frequency_start[f]))
-        data = spa.write(":SENS:FREQ:STOP {} MHz".format(c.iq_frequency_stop[f]))
+        spa.write(":SENS:FREQ:START {} MHz".format(c.iq_frequency_start[f]))
+        spa.write(":SENS:FREQ:STOP {} MHz".format(c.iq_frequency_stop[f]))
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
 
-        #print(get_message(conn, ":SYST:ERR?"))
-
         # Set sweep mode
-        # data = spa.write(":SWEep:MODE FFT")  # NON SUPPORTATO IN MS27201A
+        # spa.write(":SWEep:MODE FFT")  # NON SUPPORTATO IN MS27201A
 
         # Set RBW
-        data = spa.write(":SENS:BWID:RES {} MHz".format(bandwidth))
+        spa.write(":SENS:BWID:RES {} MHz".format(bandwidth))
 
         # Set Reference Level to -30 dBm
-        data = spa.write(":DISP:WIND:TRAC:Y:SCAL:RLEV -70")
+        spa.write(":DISP:WIND:TRAC:Y:SCAL:RLEV -70")
 
         # Set to single sweep
-        data = spa.write(":INIT:CONT ON")
+        spa.write(":INIT:CONT ON")
 
         # Set number of display points to calculate frequency array
         # write("DISP:POIN 601;")
@@ -184,83 +176,56 @@ def iq_measure_rack(ch, conn, location_name):
         # Get number of display points to calculate frequency array
         # print(spa.query(":DISP:POIN?;"))
 
-        data = spa.write(":SENS:AVER:TYPE NORM")
+        spa.write(":SENS:AVER:TYPE NORM")
 
-        sb = ""
-        #if (bandwidth == 10): sb = "SB12"
-        #elif (bandwidth == 20): sb = "SB9"
-        #elif (bandwidth == 40): sb = "SB6"
-        #elif (bandwidth == 80): sb = "SB3"
-        #else: sb = "SB19"
-        sb = "SB19"
+        if (bandwidth == 10): sb = "SB12"
+        elif (bandwidth == 20): sb = "SB9"
+        elif (bandwidth == 40): sb = "SB6"
+        elif (bandwidth == 80): sb = "SB3"
+        else: sb = "SB19"
+
         # Prepare per IQ Capture
-        data = spa.write("IQ:SAMP {}".format(sb))
-        data = spa.write(":IQ:LENG {} {}".format(c.iq_length_value, c.iq_length_unit))
-        data = spa.write(":IQ:BITS {}".format(c.iq_bits))
-        data = spa.write(":IQ:MODE SING")
-        data = spa.write(":IQ:TIME OFF")
-        # data = spa.write(":TRACe:IQ:DATA:FORM PACK")
-        # data = spa.write(":TRAC:IQ:DATA:FORM ASC")
-        data = spa.write(":INIT:CONT ON")
-        print("Start Capture....\n")
-        data = spa.write(":IQ:DISCard")
+        spa.write("IQ:SAMP {}".format(sb))
+        spa.write(":IQ:LENG {} {}".format(c.iq_length_value, c.iq_length_unit))
+        spa.write(":IQ:BITS {}".format(c.iq_bits))
+        spa.write(":IQ:MODE SING")
+        spa.write(":IQ:TIME OFF")
+        spa.write(":TRACe:IQ:DATA:FORM PACK")
+        # spa.write(":TRAC:IQ:DATA:FORM ASC")
+        spa.write(":INIT:CONT ON")
 
-        spa.read_termination = ''
-        data = spa.write("MEAS:IQ:CAPT")
-        spa.read_termination = '\n'
+        print_in_log("Start IQ Capture\n")
 
-        #status = spa.query(":STAT:OPER?\n")
-        #print("Sweep Status:  " + status)
-
+        spa.write("MEAS:IQ:CAPT")
         time.sleep(1)
 
-        dati = spa.query("TRAC:IQ:DATA?\n")
-        print(len(dati))
+        spa.write("TRAC:IQ:DATA?")
+        iq_data_header = spa.read_raw().decode()
 
-        time.sleep(1)
+        if iq_data_header[0] == '#':
+            spa.read_termination = ''
+            nlength = int(iq_data_header[1])
+            length = int(iq_data_header[2:2 + nlength])
 
-        dati2 = spa.query("TRAC:IQ:DATA?\n")
-        print(len(dati2))
+            iq_data = spa.read_bytes(length - nlength)
+            print(len(iq_data))
+            spa.write(":IQ:DISCard")
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
+            dgz_filename = c.iq_measures_dir+"\\"+timestamp+".dgz"
+            with open(dgz_filename, "wb") as file:
+                file.write(iq_data)
 
-        time.sleep(1)
+            spa.read_termination = '\0'
+            spa.write(":IQ:METadata?")
+            iq_metadata_header = spa.read_bytes(6).decode()
+            if (iq_metadata_header[0] == "#"):
+                nlength = int(iq_metadata_header[1])
+                length = int(iq_metadata_header[2:2 + nlength])
+                iq_metadata = spa.read_bytes(length - nlength).decode().replace("Unknown",dgz_filename+"m")
+                with open("C:\\Users\\user\\Desktop\\"+timestamp+".dgzm", "w") as file:
+                    file.write(iq_metadata)
+    return
 
-        dati3 = spa.query("TRAC:IQ:DATA?\n")
-        print(len(dati3))
-
-        count=100
-        i=0
-        while i < count:
-            # dati = spa.query(":FETCh:PEAK?")
-            dati = spa.query("TRACE:DATA? 1")
-            print (dati)
-            i=i+1
-
-        # total_iq_data = ""
-        # if (first_iq_data[0]=="#"):
-        #     nbytes_to_look = int(first_iq_data[1])
-        #     print("nbytestolook="+str(nbytes_to_look))
-        #     nbytes = int(first_iq_data[2:2+nbytes_to_look])
-        #     print("nbytesfirstcall="+str(nbytes))
-        #     countbytes = nbytes
-        #     while (len(total_iq_data)<nbytes):
-        #         time.sleep(2)
-        #         iq_data = get_message(conn, "TRAC:IQ:DATA?")
-        #         iq_data = iq_data[2:-1]
-        #         if countbytes<len(iq_data): iq_data = iq_data[:countbytes]
-        #         total_iq_data += iq_data
-        #         countbytes -= len(iq_data)
-        #         print(countbytes)
-        # data = spa.write(":IQ:DISCard")
-        # timestamp = datetime.datetime.now()
-        # timestamp_string = timestamp.strftime("%Y%m%d%H%M%S")
-        # #print(dati)
-        # splitpathfile = c.log_iq_file.rsplit(".",1)
-        # pathfile = splitpathfile[0]+"_"+timestamp_string+"."+splitpathfile[1]
-        # log_file = open(pathfile, 'w')
-        # log_file.write('{}\n'.format(total_iq_data))
-        # log_file.close()
-        # time.sleep(1)
-    exit(0)
 
 def dbmm2_to_vm(value):
     value_in_dbmuvm = value + 115.8
