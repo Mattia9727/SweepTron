@@ -225,7 +225,6 @@ def iq_measure_rack(ch, conn, location_name):
                     iq_metadata = iq_metadata[:-1]
                 with open(dgz_filename+"m", "w") as file:
                     file.write(iq_metadata)
-    exit(0)
     return
 
 
