@@ -208,10 +208,9 @@ def iq_measure_rack(ch, conn, location_name):
             length = int(iq_data_header[2:2 + nlength])
 
             iq_data = spa.read_bytes(length - nlength)
-            print(len(iq_data))
             spa.write(":IQ:DISCard")
             timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
-            dgz_filename = c.iq_measures_dir+"\\"+timestamp+".dgz"
+            dgz_filename = c.iq_measures_dir+timestamp+".dgz"
             with open(dgz_filename, "wb") as file:
                 file.write(iq_data)
 
@@ -221,9 +220,12 @@ def iq_measure_rack(ch, conn, location_name):
             if (iq_metadata_header[0] == "#"):
                 nlength = int(iq_metadata_header[1])
                 length = int(iq_metadata_header[2:2 + nlength])
-                iq_metadata = spa.read_bytes(length - nlength).decode().replace("Unknown",dgz_filename+"m")
-                with open("C:\\Users\\user\\Desktop\\"+timestamp+".dgzm", "w") as file:
+                iq_metadata = spa.read_bytes(length).decode().replace("Unknown",dgz_filename)
+                if iq_metadata.endswith("\n"):
+                    iq_metadata = iq_metadata[:-1]
+                with open(dgz_filename+"m", "w") as file:
                     file.write(iq_metadata)
+    exit(0)
     return
 
 

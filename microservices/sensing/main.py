@@ -18,8 +18,10 @@ def sensing(ch):
     # find_device()
     conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)            #Recupera antenna factor (per ultraportable)
-    transfer_day = -1
     iq_hour = datetime.datetime.now().hour
+    if (iq_hour<7): transfer_day = 0
+    else: transfer_day = 1
+    
     # Monitoring of all DL frequencies
     while True:
         get_error(conn)
