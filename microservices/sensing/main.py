@@ -7,8 +7,8 @@ import pika
 
 from my_utils.log_utils import print_in_log
 from my_utils.sensing_utils import measure_ultraportable, measure_rack, interp_af, iq_measure_rack
-from my_utils.mq_utils import callbackTransferData, startTransferData, pingToWatchdog, stopToWatchdog
-from my_utils.anritsu_conn_utils import general_setup_connection_to_device
+from my_utils.mq_utils import callback_transfer_data, startTransferData, pingToWatchdog, stopToWatchdog, send_error_log
+from my_utils.anritsu_conn_utils import general_setup_connection_to_device, get_error
 
 import constants as c
 
@@ -17,11 +17,22 @@ def sensing(ch):
     # Crea un socket
     # find_device()
     conn,location_name = general_setup_connection_to_device()
-    c.antenna_factor = interp_af(c.frequency_center)
+    c.antenna_factor = interp_af(c.frequency_center)                    #Recupera antenna factor (per ultraportable)
     today = -1
     # Monitoring of all DL frequencies
     while True:
-        pingToWatchdog(ch)
+        get_error(conn)
+
+        #Blocco di codice che controlla se ci sono log di errore da inviare, e se si li invia a fini di allarme
+        try:
+            with open(c.error_log_file,"r") as f:
+                error_lines = f.readlines()
+                if error_lines != "":
+                    send_error_log(ch)
+        except Exception as e:
+            print("An exception occurred:", e)
+
+        pingToWatchdog(ch)                                              #Ping di notifica attività al watchdog
 
         condition = (4 <= datetime.datetime.now().hour < 7)
         if condition or c.debug_transfer:                               #Condizione di trasferimento, modificabile
@@ -52,7 +63,7 @@ def consume_thread():
 
     channel.basic_consume(queue='T-S',
                           auto_ack=True,
-                          on_message_callback=callbackTransferData)
+                          on_message_callback=callback_transfer_data)
 
     print_in_log("Inizio consume")
     try:

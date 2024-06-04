@@ -7,13 +7,16 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     processing_activity = transfer_activity = pika_params = service_log_file = disable_restart = \
     processed_iq_measures_dir = error_log_file = log_file = log_iq_file = compressed_log_file = \
     compressed_iq_log_file = transmission_freq = transmission_freq_used = transferedToday = \
-    isTransfering = device_type = debug_transfer = server_ip = url = error_url = location = lock_file = \
+    isTransfering = device_type = debug_transfer = server_ip = url = error_url = location = \
     spectrum_analyzer_ip = spectrum_analyzer_port = antenna_file = af_keysight = initial_reference_level = \
     y_ticks = command_rolling_average_time = inter_sample_time = number_samples_chp = samples_for_averages = \
     frequency_start = frequency_stop = iq_frequency_start = iq_frequency_stop = \
     num_frequencies = iq_num_frequencies = frequency_center = iq_frequency_center = minimum_level_no_pre_amp = \
     initial_guard_amplitude = time_search_for_adjust_ref_level_scale = iq_length_value = iq_length_unit = \
     iq_bits = None
+
+lock_file = False
+error_lock_file = False
 
 
 def update_all():
@@ -37,7 +40,6 @@ def update_all():
     # Estrai le costanti
     print_debug = constants["print_debug"]
     iq_mode = constants["iq_mode"]
-    lock_file = False
     grafici_dir = data_folder+"\\"+ constants["grafici_dir"]
     logs_dir = data_folder+"\\"+ constants["logs_dir"]
     measures_dir = data_folder+"\\"+ constants["measures_dir"]

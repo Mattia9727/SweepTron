@@ -7,7 +7,7 @@ import constants as c
 from .log_utils import print_in_log
 
 
-def callbackTransferData(channel, method, properties, body):
+def callback_transfer_data(channel, method, properties, body):
     msg = body.decode()
     if msg.split("_")[0] == "IQ":
         c.isTransferingIQ = False
@@ -25,7 +25,7 @@ def callbackTransferData(channel, method, properties, body):
 
 
 
-def sendIQCapture(ch):
+def send_iq_capture(ch):
     print_in_log("[Invio a Transfer] Invio cattura IQ al processing MS per compressione.")
 
     # if os.path.isfile(c.log_file[:-4] + "_tosend.dgz"):
@@ -50,7 +50,7 @@ def sendIQCapture(ch):
                              routing_key='S-P',
                              body=new_name.encode("utf-8"))
 
-def sendNormalCapture(ch):
+def send_normal_capture(ch):
     print_in_log("[Invio a Transfer] Invio cattura normale al transfer per invio.")
 
     # if os.path.isfile(c.log_file[:-4] + "_tosend.dgz"):
@@ -76,6 +76,32 @@ def sendNormalCapture(ch):
         print_in_log("Something strange happened (datetime_now?)")
         exit(0)
 
+def send_error_log(ch):
+    print_in_log("[Invio a Transfer] Invio log di errore al transfer per invio.")
+
+    # if os.path.isfile(c.log_file[:-4] + "_tosend.dgz"):
+    #     print_in_log("[Invio a Transfer] Trasferimento di cattura normale non ancora completato, attendere...")
+    #     ch.basic_publish(exchange='',
+    #                      routing_key='S-T',
+    #                      body="old")
+    # else:
+    d = datetime.now()
+    new_name = c.error_log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
+    try:
+        if c.error_lock_file == True:
+            time.sleep(0.01)
+        c.error_lock_file = True
+        os.rename(c.log_file, new_name)
+        c.error_lock_file = False
+        ch.basic_publish(exchange='',
+                         routing_key='S-T',
+                         body=new_name)
+    except FileNotFoundError:
+        print_in_log("Transfer started but no errors found. Stop transfer phase...")
+    except FileExistsError:
+        print_in_log("Something strange happened (datetime_now?)")
+        exit(0)
+
 
 
 
@@ -87,11 +113,11 @@ def startTransferData(ch):
     # Verifica se ci sono file nella cartella
     if len(normal_files) > 0:
         c.isTransfering = True
-        sendNormalCapture(ch)
+        send_normal_capture(ch)
 
     if len(iq_normal_files) > 0:
         c.isTransfering = True
-        sendIQCapture(ch)
+        send_iq_capture(ch)
 
 def pingToWatchdog(channel):
     channel.basic_publish(exchange='',
