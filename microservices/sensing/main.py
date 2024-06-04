@@ -18,7 +18,8 @@ def sensing(ch):
     # find_device()
     conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)
-    today = -1
+    transfer_day = -1
+    iq_hour = datetime.datetime.now().hour
     # Monitoring of all DL frequencies
     while True:
         pingToWatchdog(ch)
@@ -28,9 +29,9 @@ def sensing(ch):
             if c.transferedToday == 0 or c.debug_transfer:              #Se oggi il trasferimento non è avvenuto
                 startTransferData(ch)                                   #Avvia trasferimento
             c.transferedToday = 1                                       #Flag che segna l'avvenuto trasferimento di oggi
-            today = datetime.datetime.today().day                       #Aggiorno numero del giorno in cui è avvenuto il trasferimento
+            transfer_day = datetime.datetime.today().day                       #Aggiorno numero del giorno in cui è avvenuto il trasferimento
         else:
-            if today != datetime.datetime.today().day:                  #Se è cambiato il giorno
+            if transfer_day != datetime.datetime.today().day:                  #Se è cambiato il giorno
                 c.transferedToday = 0                                   #Si può di nuovo avviare il trasferimento
         c.update_all()                                                  #Ricarica configurazione da json
 
@@ -38,10 +39,12 @@ def sensing(ch):
         if c.device_type == "MS2760A":                                  #In base al tipo di analizzatore e al tipo di
             measure_ultraportable(ch, conn, location_name)              #cattura lancia la funzione corrispondente
         elif c.device_type == "MS2090A":
-            if c.iq_mode == 0:
-                measure_rack(ch, conn, location_name)
-            else:
+            condition = (iq_hour != datetime.datetime.now().hour)
+            if c.iq_mode == 1 or condition:
                 iq_measure_rack(ch, conn, location_name)
+                iq_hour = datetime.datetime.now().hour
+            else:
+                measure_rack(ch, conn, location_name)
 
 
 def consume_thread():
