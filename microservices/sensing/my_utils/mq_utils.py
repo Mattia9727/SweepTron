@@ -37,13 +37,12 @@ def send_iq_capture(ch):
     iq_normal_files = os.listdir(c.iq_measures_dir)
     if len(iq_normal_files) > 0:
         for file_name in iq_normal_files:
-            print(file_name)
-        
-            file_path = os.path.join(c.iq_measures_dir, file_name)
-            file_path_for_name = file_path.rsplit(".",1)[0]
-            print(file_path)
+            file_type = file_name.rsplit(".",1)[1]
+
+            file_path = c.iq_measures_dir + "\\" + file_name
             d = datetime.now()
-            new_name = file_path_for_name + "_" + str(d.date()) + "_{}{}{}_{}{}{}.txt".format(d.day, d.month, d.year,d.hour,d.minute,d.second)
+            new_name = (file_name[:-4] + "_" + str(d.date()) + "_{}{}{}_{}{}{}."+file_type).format(d.day, d.month, d.year,
+                                                                                           d.hour, d.minute, d.second)
             os.rename(file_path, new_name)
             # Invia il messaggio alla coda
             ch.basic_publish(exchange='',
@@ -91,7 +90,7 @@ def send_error_log(ch):
         if c.error_lock_file == True:
             time.sleep(0.01)
         c.error_lock_file = True
-        os.rename(c.log_file, new_name)
+        os.rename(c.error_log_file, new_name)
         c.error_lock_file = False
         ch.basic_publish(exchange='',
                          routing_key='S-T',

@@ -48,7 +48,7 @@ def update_all():
     spectrum_analyzer_ip = constants["spectrum_analyzer_ip"]
     spectrum_analyzer_port = int(constants["spectrum_analyzer_port"])
 
-    error_log_file = data_folder+"\\"+ constants["error_log_file"]
+    error_log_file = logs_dir+"\\"+ constants["error_log_file"]
     service_log_file = data_folder+"\\"+ constants["sensing_log_file"]
     log_file = measures_dir+"\\"+ constants["log_file"]
     log_iq_file = iq_measures_dir+"\\"+ constants["log_iq_file"]

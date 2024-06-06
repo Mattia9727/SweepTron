@@ -144,7 +144,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
     filename = body.decode("utf-8")
-    if filename.startswith(c.error_log_file[:-4]):
+    if filename.contains("log_errors"):
         print_in_log("Trasferendo error log...")
         transfering_error_log = True
     else:

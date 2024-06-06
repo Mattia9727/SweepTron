@@ -42,16 +42,16 @@ def sensing(ch):
             if c.transferedToday == 0 or c.debug_transfer:              #Se oggi il trasferimento non è avvenuto
                 startTransferData(ch)                                   #Avvia trasferimento
             c.transferedToday = 1                                       #Flag che segna l'avvenuto trasferimento di oggi
-            transfer_day = datetime.datetime.today().day                       #Aggiorno numero del giorno in cui è avvenuto il trasferimento
+            transfer_day = datetime.datetime.today().day                #Aggiorno numero del giorno in cui è avvenuto il trasferimento
         else:
-            if transfer_day != datetime.datetime.today().day:                  #Se è cambiato il giorno
+            if transfer_day != datetime.datetime.today().day:           #Se è cambiato il giorno
                 c.transferedToday = 0                                   #Si può di nuovo avviare il trasferimento
         c.update_all()                                                  #Ricarica configurazione da json
 
 
-        if c.device_type == "MS2760A":                                  #In base al tipo di analizzatore e al tipo di
-            measure_ultraportable(ch, conn, location_name)              #cattura lancia la funzione corrispondente
-        elif c.device_type == "MS2090A":
+        if c.device_type == "MS2760A" or c.device_type == "ultraportable": #In base al tipo di analizzatore e al tipo di
+            measure_ultraportable(ch, conn, location_name)                 #cattura lancia la funzione corrispondente
+        elif c.device_type == "MS2090A" or c.device_type == "rack":
             condition = (iq_hour != datetime.datetime.now().hour)
             if c.iq_mode == 1 or condition:
                 iq_measure_rack(ch, conn, location_name)
