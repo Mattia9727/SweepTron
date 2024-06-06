@@ -12,9 +12,11 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     compressed_iq_log_file = transmission_freq = transmission_freq_used = transferedToday = \
     isTransfering = None
 
+debug_transfer = 0
+
 
 def update_all():
-    global print_debug, iq_mode, grafici_dir, logs_dir, measures_dir, iq_measures_dir, settings_path, sensing_activity,\
+    global debug_transfer, print_debug, iq_mode, grafici_dir, logs_dir, measures_dir, iq_measures_dir, settings_path, sensing_activity,\
         processing_activity, transfer_activity, pika_params, service_log_file, disable_restart,  \
         processed_iq_measures_dir, error_log_file, log_file, log_iq_file, compressed_log_file,  \
         compressed_iq_log_file, transmission_freq, transmission_freq_used,  transferedToday,  \

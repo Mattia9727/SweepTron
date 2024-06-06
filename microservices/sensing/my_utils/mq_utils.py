@@ -41,7 +41,7 @@ def send_iq_capture(ch):
 
             file_path = c.iq_measures_dir + "\\" + file_name
             d = datetime.now()
-            new_name = (file_name[:-4] + "_" + str(d.date()) + "_{}{}{}_{}{}{}."+file_type).format(d.day, d.month, d.year,
+            new_name = (file_path.rsplit(".",1)[0] + "_" + str(d.date()) + "_{}{}{}_{}{}{}."+file_type).format(d.day, d.month, d.year,
                                                                                            d.hour, d.minute, d.second)
             os.rename(file_path, new_name)
             # Invia il messaggio alla coda

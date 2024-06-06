@@ -54,10 +54,12 @@ def send_data_to_server(timestamp, freq, dbmm2value, vmvalue):
     return str(response.status_code)
 
 def send_error_to_server(line):
+    if line=="\n": return
     json_data = {
         "location": c.location,  # Sostituisci con il tuo luogo
         "description": line,
     }
+    print(json_data)
 
     # Invia la richiesta POST al server Flask
     response = requests.post(c.error_url, json=json_data)
@@ -77,6 +79,8 @@ def callback_transfer_iq_data(ch, method, properties, body):
         return
     
     msg = send_data(body.decode())
+    if msg==200: msg="OK"
+    else: msg="Errore"
     ch.basic_publish(exchange='',
                      routing_key='T-S',
                      body=("IQ_"+msg).encode("utf-8"))
@@ -144,7 +148,7 @@ def callback_transfer_normal_data(ch, method, properties, body):
         print_in_log("Server irraggiungibile... provare più tardi")
         return
     filename = body.decode("utf-8")
-    if filename.contains("log_errors"):
+    if "log_errors" in filename:
         print_in_log("Trasferendo error log...")
         transfering_error_log = True
     else:

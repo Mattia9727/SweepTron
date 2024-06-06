@@ -151,9 +151,13 @@ def iq_measure_rack(ch, conn, location_name):
     spa.write_termination = '\n'
     spa.chunk_size = 2048
 
+
     for f in range(c.iq_num_frequencies):
         pingToWatchdog(ch)
         print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
+        
+        spa.write(":MMEMory:STORe:CAPTure:MODE MANual")
+        
         spa.write(":SENS:FREQ:START {} MHz".format(c.iq_frequency_start[f]))
         spa.write(":SENS:FREQ:STOP {} MHz".format(c.iq_frequency_stop[f]))
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
@@ -190,7 +194,7 @@ def iq_measure_rack(ch, conn, location_name):
         spa.write(":IQ:BITS {}".format(c.iq_bits))
         spa.write(":IQ:MODE SING")
         spa.write(":IQ:TIME OFF")
-        spa.write(":TRACe:IQ:DATA:FORM PACK")
+        spa.write(":TRAC:IQ:DATA:FORM PACK")
         # spa.write(":TRAC:IQ:DATA:FORM ASC")
         spa.write(":INIT:CONT ON")
 
@@ -200,14 +204,14 @@ def iq_measure_rack(ch, conn, location_name):
         time.sleep(1)
 
         spa.write("TRAC:IQ:DATA?")
-        iq_data_header = spa.read_raw().decode()
+        iq_data_header = spa.read()
 
         if iq_data_header[0] == '#':
             spa.read_termination = ''
             nlength = int(iq_data_header[1])
             length = int(iq_data_header[2:2 + nlength])
 
-            iq_data = spa.read_bytes(length - nlength)
+            iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength+1))
             spa.write(":IQ:DISCard")
             timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
             dgz_filename = c.iq_measures_dir+timestamp+".dgz"

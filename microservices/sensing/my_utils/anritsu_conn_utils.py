@@ -85,7 +85,7 @@ def update_error_log(message):
     error_log_file_name = c.error_log_file
     error_log_file = open(error_log_file_name, 'a')
     current_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
-    error_log_file.write(str(format(current_timestamp)) + " " + message + "\n")
+    error_log_file.write(str(format(current_timestamp)) + " " + message)
 
 
 def get_error(conn):

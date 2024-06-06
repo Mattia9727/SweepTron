@@ -30,10 +30,13 @@ def sensing(ch):
         try:
             with open(c.error_log_file,"r") as f:
                 error_lines = f.readlines()
-                if error_lines != "":
-                    send_error_log(ch)
+            if len(error_lines) != 0:
+                send_error_log(ch)
+        except FileNotFoundError:
+            open(c.error_log_file,"w")
         except Exception as e:
             print("An exception occurred:", e)
+            
 
         pingToWatchdog(ch)                                              #Ping di notifica attività al watchdog
 
