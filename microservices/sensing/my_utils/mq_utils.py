@@ -84,7 +84,7 @@ def send_error_log(ch):
         if c.error_lock_file == True:
             time.sleep(0.01)
         c.error_lock_file = True
-        os.rename(c.log_file, new_name)
+        os.rename(c.error_log_file, new_name)
         c.error_lock_file = False
         ch.basic_publish(exchange='',
                          routing_key='S-T',

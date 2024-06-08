@@ -12,7 +12,7 @@ from my_utils.mq_utils import stopToWatchdog, pingToWatchdog
 def compress_iq_lzma(body):
     with open(body, "rb") as f:
         data = f.read()
-    print_in_log("Compressing " + body)
+    print_in_log("Compressing " + body.decode())
     body2 = body.decode().replace(c.iq_measures_dir,c.processed_iq_measures_dir)
     with lzma.open(body2, "w") as f:
         f.write(data)

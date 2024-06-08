@@ -4,7 +4,7 @@ import time
 
 import win32serviceutil
 import constants as c
-from microservices.watchdog.my_utils.log_utils import print_in_log
+from my_utils.log_utils import print_in_log
 
 
 def restart_service(service_name):

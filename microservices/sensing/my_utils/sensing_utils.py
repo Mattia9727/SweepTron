@@ -154,6 +154,9 @@ def iq_measure_rack(ch, conn, location_name):
     for f in range(c.iq_num_frequencies):
         pingToWatchdog(ch)
         print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
+
+        spa.write(":MMEMory:STORe:CAPTure:MODE MANual")
+
         spa.write(":SENS:FREQ:START {} MHz".format(c.iq_frequency_start[f]))
         spa.write(":SENS:FREQ:STOP {} MHz".format(c.iq_frequency_stop[f]))
         bandwidth = c.iq_frequency_stop[f] - c.iq_frequency_start[f]
@@ -190,7 +193,7 @@ def iq_measure_rack(ch, conn, location_name):
         spa.write(":IQ:BITS {}".format(c.iq_bits))
         spa.write(":IQ:MODE SING")
         spa.write(":IQ:TIME OFF")
-        spa.write(":TRACe:IQ:DATA:FORM PACK")
+        spa.write(":TRAC:IQ:DATA:FORM PACK")
         # spa.write(":TRAC:IQ:DATA:FORM ASC")
         spa.write(":INIT:CONT ON")
 
@@ -207,10 +210,10 @@ def iq_measure_rack(ch, conn, location_name):
             nlength = int(iq_data_header[1])
             length = int(iq_data_header[2:2 + nlength])
 
-            iq_data = spa.read_bytes(length - nlength)
+            iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength+1))
             spa.write(":IQ:DISCard")
             timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
-            dgz_filename = c.iq_measures_dir+"\\"+timestamp+".dgz"
+            dgz_filename = c.iq_measures_dir+timestamp+".dgz"
             with open(dgz_filename, "wb") as file:
                 file.write(iq_data)
 
@@ -220,8 +223,10 @@ def iq_measure_rack(ch, conn, location_name):
             if (iq_metadata_header[0] == "#"):
                 nlength = int(iq_metadata_header[1])
                 length = int(iq_metadata_header[2:2 + nlength])
-                iq_metadata = spa.read_bytes(length - nlength).decode().replace("Unknown",dgz_filename+"m")
-                with open("C:\\Users\\user\\Desktop\\"+timestamp+".dgzm", "w") as file:
+                iq_metadata = spa.read_bytes(length).decode().replace("Unknown",dgz_filename)
+                if iq_metadata.endswith("\n"):
+                    iq_metadata = iq_metadata[:-1]
+                with open(dgz_filename+"m", "w") as file:
                     file.write(iq_metadata)
     return
 
