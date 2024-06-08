@@ -37,18 +37,11 @@ def send_iq_capture(ch):
     iq_normal_files = os.listdir(c.iq_measures_dir)
     if len(iq_normal_files) > 0:
         for file_name in iq_normal_files:
-            print(file_name)
-        
-            file_path = os.path.join(c.iq_measures_dir, file_name)
-            file_path_for_name = file_path.rsplit(".",1)[0]
-            print(file_path)
-            d = datetime.now()
-            new_name = file_path_for_name + "_" + str(d.date()) + "_{}{}{}_{}{}{}.txt".format(d.day, d.month, d.year,d.hour,d.minute,d.second)
-            os.rename(file_path, new_name)
+            file_path = c.iq_measures_dir + "\\" + file_name
             # Invia il messaggio alla coda
             ch.basic_publish(exchange='',
                              routing_key='S-P',
-                             body=new_name.encode("utf-8"))
+                             body=file_path.encode("utf-8"))
 
 def send_normal_capture(ch):
     print_in_log("[Invio a Transfer] Invio cattura normale al transfer per invio.")

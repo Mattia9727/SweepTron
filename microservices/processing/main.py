@@ -21,12 +21,14 @@ def compress_iq_lzma(body):
 
 
 def callback_processing_data(ch, method, properties, body):
+    c.compressing+=1
     print_in_log("Callback processing attivato")
     body2 = compress_iq_lzma(body)
+    print_in_log("Processamento di " + body.decode() + " completato")
     ch.basic_publish(exchange='',
                      routing_key='P-T',
                      body=body2.encode("utf-8"))
-
+    c.compressing-=1
 
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
@@ -67,7 +69,7 @@ def main():
     # TODO: Provvisorio, capire come gestire bene watchdog
     now = datetime.datetime.now()
     delta = datetime.timedelta(hours=3)
-    while (now + delta > datetime.datetime.now()):
+    while (now + delta > datetime.datetime.now() or c.compressing > 0):
         time.sleep(30)
         pingToWatchdog(channel)
     stopToWatchdog(channel)

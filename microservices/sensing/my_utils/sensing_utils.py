@@ -123,23 +123,23 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     return reference_level, scale_div
 
 
-def plot_measure(measured_emf_matrix_base_station,f):
-    t = datetime.datetime.now()
-    y, M, d, h, m, s = t.year, t.month, t.day, t.hour, t.minute, round(t.second)
-    plt.plot(measured_emf_matrix_base_station[f, :], "b-", linewidth=2)
-    plt.xlabel("Sample Number [unit]", fontsize=14)
-    plt.ylabel("Channel Power [V/m]", fontsize=14)
-    plt.title("Frequency {} MHz Timestamp: {}/{}/{}, {}:{}:{}".format(c.frequency_center[f], y, M, d, h, m, s),
-              fontsize=16)
-
-    # Save the figure with a unique file name based on date and time
-    if not os.path.exists(c.grafici_dir):
-        # Create a new directory because it does not exist
-        os.makedirs(c.grafici_dir)
-
-    plot_file = 'freq_{}.jpg'.format(c.frequency_center[f])
-    plt.savefig(os.path.join(c.grafici_dir, plot_file))
-    plt.clf()
+# def plot_measure(measured_emf_matrix_base_station,f):
+#     t = datetime.datetime.now()
+#     y, M, d, h, m, s = t.year, t.month, t.day, t.hour, t.minute, round(t.second)
+#     plt.plot(measured_emf_matrix_base_station[f, :], "b-", linewidth=2)
+#     plt.xlabel("Sample Number [unit]", fontsize=14)
+#     plt.ylabel("Channel Power [V/m]", fontsize=14)
+#     plt.title("Frequency {} MHz Timestamp: {}/{}/{}, {}:{}:{}".format(c.frequency_center[f], y, M, d, h, m, s),
+#               fontsize=16)
+#
+#     # Save the figure with a unique file name based on date and time
+#     if not os.path.exists(c.grafici_dir):
+#         # Create a new directory because it does not exist
+#         os.makedirs(c.grafici_dir)
+#
+#     plot_file = 'freq_{}.jpg'.format(c.frequency_center[f])
+#     plt.savefig(os.path.join(c.grafici_dir, plot_file))
+#     plt.clf()
 
 def iq_measure_rack(ch, conn, location_name):
 
@@ -208,7 +208,6 @@ def iq_measure_rack(ch, conn, location_name):
             length = int(iq_data_header[2:2 + nlength])
 
             iq_data = spa.read_bytes(length - nlength)
-            print(len(iq_data))
             spa.write(":IQ:DISCard")
             timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
             dgz_filename = c.iq_measures_dir+"\\"+timestamp+".dgz"

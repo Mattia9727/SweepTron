@@ -12,6 +12,8 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     compressed_iq_log_file = transmission_freq = transmission_freq_used = transferedToday = \
     isTransfering = None
 
+compressing = 0
+
 
 def update_all():
     global print_debug, iq_mode, grafici_dir, logs_dir, measures_dir, iq_measures_dir, settings_path, sensing_activity,\
@@ -20,7 +22,7 @@ def update_all():
         compressed_iq_log_file, transmission_freq, transmission_freq_used,  transferedToday,  \
         isTransfering
 
-    settings_path = os.path.join(data_folder, 'config.json')
+    settings_path = data_folder + "\\" + 'config.json'
 
     # Carica le costanti dal file JSON
     with open(settings_path) as f:
@@ -34,14 +36,14 @@ def update_all():
     logs_dir = data_folder + "\\" + constants["logs_dir"]
     measures_dir = data_folder + "\\" + constants["measures_dir"]
     iq_measures_dir = data_folder + "\\" + constants["iq_measures_dir"]
-    processed_iq_measures_dir = os.path.join(data_folder, constants["processed_iq_measures_dir"])
+    processed_iq_measures_dir = data_folder + "\\" + constants["processed_iq_measures_dir"]
 
-    error_log_file = os.path.join(data_folder, constants["error_log_file"])
+    error_log_file = data_folder + "\\" + constants["error_log_file"]
     service_log_file = data_folder + "\\" + constants["processing_log_file"]
-    log_file = os.path.join(measures_dir, constants["log_file"])
-    log_iq_file = os.path.join(iq_measures_dir, constants["log_iq_file"])
-    compressed_log_file = os.path.join(data_folder, constants["compressed_log_file"])
-    compressed_iq_log_file = os.path.join(data_folder, constants["compressed_iq_log_file"])
+    log_file = measures_dir + "\\" + constants["log_file"]
+    log_iq_file = iq_measures_dir + "\\" + constants["log_iq_file"]
+    compressed_log_file = data_folder + "\\" + constants["compressed_log_file"]
+    compressed_iq_log_file = data_folder + "\\" + constants["compressed_iq_log_file"]
 
     pika_params = constants["pika_params"]
 
