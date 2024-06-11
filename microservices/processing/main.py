@@ -58,10 +58,10 @@ def main():
                                        blocked_connection_timeout=300))
     channel = connection.channel()
 
-    if (not(4<=datetime.datetime.now().hour<7) and not c.debug_transfer):
-        stopToWatchdog(channel)
-        print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
-        return
+    #if (not(4<=datetime.datetime.now().hour<7) and not c.debug_transfer):
+    #    stopToWatchdog(channel)
+    #    print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
+    #    return
 
     print_in_log("Processing microservice ON (" + str(datetime.datetime.now().hour)+")")
     start_consuming_thread()
@@ -69,13 +69,13 @@ def main():
     # TODO: Provvisorio, capire come gestire bene watchdog
     now = datetime.datetime.now()
     delta = datetime.timedelta(hours=3)
-    while (now + delta > datetime.datetime.now() or c.compressing > 0):
+    while True:
         time.sleep(30)
         pingToWatchdog(channel)
-    stopToWatchdog(channel)
-    connection.close()
+    #stopToWatchdog(channel)
+    #connection.close()
 
-    return
+    #return
 
 
 if __name__ == "__main__":

@@ -107,8 +107,6 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
 
     #scale_div = abs(reference_level - min_marker) / y_ticks
     scale_div = abs(reference_level - calc_min_marker) / y_ticks
-    if c.print_debug == 1:
-        print(str(scale_div))
     if scale_div>15: scale_div=15
     if scale_div<1: scale_div=1
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(int(scale_div))
@@ -153,7 +151,7 @@ def iq_measure_rack(ch, conn, location_name):
 
     for f in range(c.iq_num_frequencies):
         pingToWatchdog(ch)
-        print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
+        print_in_log("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
 
         spa.write(":MMEMory:STORe:CAPTure:MODE MANual")
 
@@ -210,7 +208,7 @@ def iq_measure_rack(ch, conn, location_name):
             nlength = int(iq_data_header[1])
             length = int(iq_data_header[2:2 + nlength])
 
-            iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength+1))
+            iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength))
             spa.write(":IQ:DISCard")
             timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
             dgz_filename = c.iq_measures_dir+timestamp+".dgz"
