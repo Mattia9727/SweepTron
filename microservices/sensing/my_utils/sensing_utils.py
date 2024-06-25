@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 import constants as c
 
 from .anritsu_conn_utils import connect_to_device, get_message, send_command, get_error, \
-    setup_for_single_freq, general_setup_connection_to_device
+    setup_for_single_freq, general_setup_connection_to_device, update_error_log
 import time
 
 from .log_utils import print_in_log
@@ -107,8 +107,6 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
 
     #scale_div = abs(reference_level - min_marker) / y_ticks
     scale_div = abs(reference_level - calc_min_marker) / y_ticks
-    if c.print_debug == 1:
-        print(str(scale_div))
     if scale_div>15: scale_div=15
     if scale_div<1: scale_div=1
     str_scale_div = ':DISP:WIND:TRAC:Y:PDIVISION {}\n'.format(int(scale_div))
@@ -153,7 +151,7 @@ def iq_measure_rack(ch, conn, location_name):
 
     for f in range(c.iq_num_frequencies):
         pingToWatchdog(ch)
-        print("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
+        print_in_log("inizio cattura iq per freq "+str(c.iq_frequency_center[f]))
 
         spa.write(":MMEMory:STORe:CAPTure:MODE MANual")
 
@@ -203,31 +201,42 @@ def iq_measure_rack(ch, conn, location_name):
         time.sleep(1)
 
         spa.write("TRAC:IQ:DATA?")
-        iq_data_header = spa.read_raw().decode()
+        try:
+            iq_data_header = spa.read_raw().decode()
+            print(len(iq_data_header))
 
-        if iq_data_header[0] == '#':
-            spa.read_termination = ''
-            nlength = int(iq_data_header[1])
-            length = int(iq_data_header[2:2 + nlength])
+            if iq_data_header[0] == '#':
+                spa.read_termination = ''
+                nlength = int(iq_data_header[1])
+                length = int(iq_data_header[2:2 + nlength])
 
-            iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength+1))
-            spa.write(":IQ:DISCard")
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
-            dgz_filename = c.iq_measures_dir+timestamp+".dgz"
-            with open(dgz_filename, "wb") as file:
-                file.write(iq_data)
+                iq_data = spa.read_bytes(length - (len(iq_data_header)-2-nlength))
+                spa.write(":IQ:DISCard")
+                timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%SZ')
+                dgz_filename = c.iq_measures_dir+timestamp+".dgz"
+                with open(dgz_filename, "wb") as file:
+                    file.write(iq_data)
 
-            spa.read_termination = '\0'
-            spa.write(":IQ:METadata?")
-            iq_metadata_header = spa.read_bytes(6).decode()
-            if (iq_metadata_header[0] == "#"):
-                nlength = int(iq_metadata_header[1])
-                length = int(iq_metadata_header[2:2 + nlength])
-                iq_metadata = spa.read_bytes(length).decode().replace("Unknown",dgz_filename)
-                if iq_metadata.endswith("\n"):
-                    iq_metadata = iq_metadata[:-1]
-                with open(dgz_filename+"m", "w") as file:
-                    file.write(iq_metadata)
+                spa.read_termination = '\0'
+                spa.write(":IQ:METadata?")
+                iq_metadata_header = spa.read_bytes(6).decode()
+                if (iq_metadata_header[0] == "#"):
+                    nlength = int(iq_metadata_header[1])
+                    length = int(iq_metadata_header[2:2 + nlength])
+                    iq_metadata = spa.read_bytes(length).decode().replace("Unknown",dgz_filename)
+                    if iq_metadata.endswith("\n"):
+                        iq_metadata = iq_metadata[:-1]
+                    with open(dgz_filename+"m", "w") as file:
+                        file.write(iq_metadata) 
+        except Exception as e:
+            print_in_log("Errore Cattura IQ: "+str(e))
+            update_error_log("Errore Cattura IQ: "+str(e))
+            if os.path.exists(dgz_filename):
+                os.remove(dgz_filename)
+            if os.path.exists(dgz_filename+"m"):
+                os.remove(dgz_filename+"m")
+        if c.iq_mode==1:
+                exit(0)
     return
 
 

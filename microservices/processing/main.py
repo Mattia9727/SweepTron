@@ -54,16 +54,17 @@ def start_ping_thread():
     thread.start()
 
 
+
 def main():
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=600,
                                        blocked_connection_timeout=300))
     channel = connection.channel()
 
-    if (not(4<=datetime.datetime.now().hour<7) and not c.debug_transfer):
-        stopToWatchdog(channel)
-        print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
-        return
+    #if (not(4<=datetime.datetime.now().hour<7) and not c.debug_transfer):
+    #    stopToWatchdog(channel)
+    #    print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
+    #    return
 
     print_in_log("Processing microservice ON (" + str(datetime.datetime.now().hour)+")")
     start_ping_thread()
