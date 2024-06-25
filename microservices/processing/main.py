@@ -30,26 +30,28 @@ def callback_processing_data(ch, method, properties, body):
                      body=body2.encode("utf-8"))
     c.compressing-=1
 
-def consume_thread():
+
+def ping_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
-    channel.queue_declare(queue='P-T')
-    channel.queue_declare(queue='S-P')
     channel.queue_declare(queue='P-W')
-    pingToWatchdog(channel)
-    try:
-        channel.basic_consume(queue='S-P', on_message_callback=callback_processing_data, auto_ack=True)
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        stopToWatchdog(channel)
+
+    now = datetime.datetime.now()
+    delta = datetime.timedelta(hours=3)
+    while (now + delta > datetime.datetime.now() or c.compressing > 0):
+        time.sleep(30)
+        pingToWatchdog(channel)
+    stopToWatchdog(channel)
+    connection.close()
+
+    return
 
 
-def start_consuming_thread():
+def start_ping_thread():
     # Crea un thread e avvia la funzione consume()
-    thread = threading.Thread(target=consume_thread)
+    thread = threading.Thread(target=ping_thread)
     thread.daemon = True
     thread.start()
-
 
 
 def main():
@@ -64,18 +66,17 @@ def main():
         return
 
     print_in_log("Processing microservice ON (" + str(datetime.datetime.now().hour)+")")
-    start_consuming_thread()
+    start_ping_thread()
 
-    # TODO: Provvisorio, capire come gestire bene watchdog
-    now = datetime.datetime.now()
-    delta = datetime.timedelta(hours=3)
-    while (now + delta > datetime.datetime.now() or c.compressing > 0):
-        time.sleep(30)
-        pingToWatchdog(channel)
-    stopToWatchdog(channel)
-    connection.close()
+    channel.queue_declare(queue='P-T')
+    channel.queue_declare(queue='S-P')
 
-    return
+    try:
+        channel.basic_consume(queue='S-P', on_message_callback=callback_processing_data, auto_ack=True)
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        print_in_log("Keyboard Interrupt")
+        exit(0)
 
 
 if __name__ == "__main__":

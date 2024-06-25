@@ -182,27 +182,23 @@ def callback_transfer_normal_data(ch, method, properties, body):
                      body=("normal_OK").encode("utf-8"))
 
 
-def consume_thread():
+def ping_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params))
     channel = connection.channel()
-
-    channel.queue_declare(queue='T-S')
     channel.queue_declare(queue='T-W')
-    channel.queue_declare(queue='S-T')
-    channel.queue_declare(queue='P-T')
 
-    pingToWatchdog(channel)
     try:
-        channel.basic_consume(queue='P-T', on_message_callback=callback_transfer_iq_data, auto_ack=True)
-        channel.basic_consume(queue='S-T', on_message_callback=callback_transfer_normal_data, auto_ack=True)
-        channel.start_consuming()
-    except KeyboardInterrupt:
+        while (True):
+            time.sleep(30)
+            pingToWatchdog(channel)
+    except Exception:
+        connection.close()
         stopToWatchdog(channel)
 
 
-def start_consuming_thread():
+def start_ping_thread():
     # Crea un thread e avvia la funzione consume()
-    thread = threading.Thread(target=consume_thread)
+    thread = threading.Thread(target=ping_thread)
     thread.daemon = True
     thread.start()
 
@@ -219,16 +215,24 @@ def main():
     #    print_in_log("Orario di inizio errato (" + str(datetime.datetime.now().hour)+")")
     #    return
 
-    print_in_log("Transfer microservice ON (" + str(datetime.datetime.now().hour)+")")
-    start_consuming_thread()
+    print_in_log("Transfer microservice ON (" + str(datetime.datetime.now().hour) + ")")
+    start_ping_thread()
+
+    channel.queue_declare(queue='T-S')
+    channel.queue_declare(queue='S-T')
+    channel.queue_declare(queue='P-T')
 
     try:
-        while (True):
-            time.sleep(30)
-            pingToWatchdog(channel)
-    except Exception:
-        connection.close()
-        stopToWatchdog(channel)
+        channel.basic_consume(queue='P-T', on_message_callback=callback_transfer_iq_data, auto_ack=True)
+        channel.basic_consume(queue='S-T', on_message_callback=callback_transfer_normal_data, auto_ack=True)
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        print_in_log("Keyboard Interrupt")
+        exit(0)
+
+
+
+
 
 if __name__ == "__main__":
     main()

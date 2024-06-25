@@ -165,7 +165,7 @@ def iq_measure_rack(ch, conn, location_name):
         # spa.write(":SWEep:MODE FFT")  # NON SUPPORTATO IN MS27201A
 
         # Set RBW
-        spa.write(":SENS:BWID:RES {} MHz".format(bandwidth))
+        #spa.write(":SENS:BWID:RES {} MHz".format(bandwidth))
 
         # Set Reference Level to -30 dBm
         spa.write(":DISP:WIND:TRAC:Y:SCAL:RLEV -70")
