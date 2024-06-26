@@ -27,10 +27,13 @@ def check_server_reachability():
 
 
 def send_data(file_path):
+    jsondata = {"location":c.location}
+    import json
     with open(file_path, "rb") as file:
-        files = {'file': (file_path, file)}
+        files = {'json': (None, json.dumps(jsondata), 'application/json'),
+                 'file': (file_path, file, 'application/octet-stream')}
         try:
-            response = requests.post(c.url, files=files)
+            response = requests.post(c.file_url, files=files)
             return response.status_code
         except requests.exceptions.ConnectionError:
             print_in_log("Server non trovato. Verificare che il server sia acceso per il trasferimento.")

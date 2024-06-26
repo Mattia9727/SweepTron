@@ -9,7 +9,7 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     processing_activity = transfer_activity = pika_params = service_log_file = disable_restart = \
     processed_iq_measures_dir = error_log_file = log_file = log_iq_file = compressed_log_file = \
     compressed_iq_log_file = transmission_freq = transmission_freq_used = transferedToday = \
-    isTransfering = device_type = debug_transfer = server_ip = url = error_url = location = None
+    isTransfering = device_type = debug_transfer = server_ip = url = file_url = error_url = location = None
 
 
 def update_all():
@@ -17,7 +17,7 @@ def update_all():
         processing_activity, transfer_activity, pika_params, service_log_file, disable_restart,  \
         processed_iq_measures_dir, error_log_file, log_file, log_iq_file, compressed_log_file,  \
         compressed_iq_log_file, transmission_freq, transmission_freq_used,  transferedToday,  \
-        isTransfering, device_type, debug_transfer, server_ip, url, error_url, location
+        isTransfering, device_type, debug_transfer, server_ip, url, file_url, error_url, location
 
     settings_path =  data_folder + "\\" + 'config.json'
 
@@ -55,6 +55,7 @@ def update_all():
 
     server_ip = constants["server_ip"]
     url = constants["url"]
+    file_url = constants["file_url"]
     error_url = constants["error_url"]
 
     location = constants["location"]
