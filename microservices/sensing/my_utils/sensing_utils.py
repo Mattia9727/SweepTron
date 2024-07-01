@@ -113,7 +113,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     send_command(conn,str_scale_div)  # automatic scale div setting
 
     if c.device_type == "MS2760A" or c.device_type == "ultraportable":
-        if int(max_marker) + if_gain_margin < if_gain_threshold:
+        if (int(max_marker) + if_gain_margin < if_gain_threshold) or c.force_if_gain:
             send_command(conn,":POW:IF:GAIN:STAT ON\n")
         else:
             send_command(conn, ":POW:IF:GAIN:STAT OFF\n")
