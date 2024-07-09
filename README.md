@@ -93,7 +93,7 @@ Per la configurazione iniziale è importante impostare *config.json*, in partico
   watchdog.exe start
   ```
 5. Impostare avvio dei servizi di Processing e Transfer alle 4 di notte
-- Scompattare il file *Restart_cronjob_setup.zip*
+- Scompattare il file *Restart_cronjob_setup.zip* all'interno della cartella in cui sono presenti le build dei servizi (ovvero le cartelle sensing, processing, transfer, watchdog)
 - Aprire *Utilità di pianificazione* di Windows
 - Cliccare su *Importa attività* e selezionare i due file xml scompattati precedentemente
 - Ognuna delle due attività esegue il relativo file *bat* contenuto nell'archivio. Controllare che il path sia corretto.
