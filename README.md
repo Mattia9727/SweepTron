@@ -49,11 +49,23 @@ Per la configurazione iniziale è importante impostare *config.json*, in partico
 
 1. location: nome del nodo (es: Comune Bologna, Encelado, ecc...). Da notare che questo nome identifica i dati acquisiti su InfluxDB.
 
-2. device_type: definisce il tipo di analizzatore (rack:MS27201A o ultraportable:MS2760A)
+2. spectrum_analyzer_ip/spectrum_analyzer_port: indirizzo IP e porta dell'analizzatore. Generalmente sono impostati in questo modo, anche se possono variare in base all'impostazione specifica dell'analizzatore:
+- Analizzatore rack:
+  ```
+  "spectrum_analyzer_ip": "10.0.0.2",
+  "spectrum_analyzer_port": 9001,
+  ```
+- Analizzatore ultraportable:
+  ```
+  "spectrum_analyzer_ip": "localhost",
+  "spectrum_analyzer_port": "59001",
+  ```
 
-3. antenna_file/af_keysight: IMPORTANTE PER NON SFALSARE LE ACQUISIZIONI, definisce dei fattori per la conversione in dBm/m^2 e V/m. La stringa *antenna_file* è usata per impostare l'antenna factor sull'analizzatore rack, mentre la stringa *af_keysight* definisce il nome del file locale che contiene l'antenna factor, che viene utilizzato per convertire lato PC embedded i dati acquisiti dall'ultraportable.
+4. device_type: definisce il tipo di analizzatore (rack:MS27201A o ultraportable:MS2760A)
 
-4. (iq_)frequency_start/(iq_)frequency_stop: liste di frequenze da monitorare (ES: con una configurazione di questo tipo:
+5. antenna_file/af_keysight: IMPORTANTE PER NON SFALSARE LE ACQUISIZIONI, definisce dei fattori per la conversione in dBm/m^2 e V/m. La stringa *antenna_file* è usata per impostare l'antenna factor sull'analizzatore rack, mentre la stringa *af_keysight* definisce il nome del file locale che contiene l'antenna factor, che viene utilizzato per convertire lato PC embedded i dati acquisiti dall'ultraportable.
+
+6. (iq_)frequency_start/(iq_)frequency_stop: liste di frequenze da monitorare (ES: con una configurazione di questo tipo:
    ```
     "frequency_start": [3440, 3540, 3560, 3620, 3640, 3720, 758, 768, 778],
     "frequency_stop": [3500, 3560, 3620, 3640, 3720, 3800, 768, 778, 788],
