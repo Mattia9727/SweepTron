@@ -1,4 +1,5 @@
 import json
+import os
 
 #data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
@@ -100,5 +101,18 @@ def update_all():
     location = constants["location"]
 
     force_if_gain = constants["force_if_gain"]
+
+    if not os.path.exists(logs_dir):
+        # Create a new directory
+        os.makedirs(logs_dir)
+
+    if not os.path.exists(measures_dir):
+        # Create a new directory
+        os.makedirs(measures_dir)
+
+    if not os.path.exists(iq_measures_dir):
+        # Create a new directory
+        os.makedirs(iq_measures_dir)
+
 
 update_all()
