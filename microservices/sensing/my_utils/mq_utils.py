@@ -55,7 +55,7 @@ def send_normal_capture(ch):
     d = datetime.now()
     new_name = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
     try:
-        if c.lock_file == True:
+        while c.lock_file == True:
             time.sleep(0.01)
         c.lock_file = True
         os.rename(c.log_file, new_name)
@@ -81,11 +81,11 @@ def send_error_log(ch):
     d = datetime.now()
     new_name = c.error_log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
     try:
-        if c.error_lock_file == True:
-            time.sleep(0.01)
-        c.error_lock_file = True
+        #while c.error_lock_file == True:
+        #    time.sleep(0.01)
+        #c.error_lock_file = True
         os.rename(c.error_log_file, new_name)
-        c.error_lock_file = False
+        #c.error_lock_file = False
         ch.basic_publish(exchange='',
                          routing_key='S-T',
                          body=new_name)

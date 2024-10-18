@@ -50,8 +50,4 @@ def update_all():
     transferedToday = constants["transferedToday"]
     isTransfering = constants["isTransfering"]
 
-    if not os.path.exists(processed_iq_measures_dir):
-        # Create a new directory
-        os.makedirs(processed_iq_measures_dir)
-
 update_all()

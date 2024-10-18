@@ -18,7 +18,7 @@ def sensing(ch):
     # find_device()
     conn,location_name = general_setup_connection_to_device()
     c.antenna_factor = interp_af(c.frequency_center)            #Recupera antenna factor (per ultraportable)
-    iq_hour = datetime.datetime.now().hour
+    iq_hour = datetime.datetime.now().hour       
     if (iq_hour<7): transfer_day = 0
     else: transfer_day = 1
     
@@ -40,8 +40,8 @@ def sensing(ch):
 
         pingToWatchdog(ch)                                              #Ping di notifica attività al watchdog
 
-        condition = (4 <= datetime.datetime.now().hour < 7)
-        if condition or c.debug_transfer:                               #Condizione di trasferimento, modificabile
+        condition = (4 <= datetime.datetime.now().hour < 7)             #dice che il trasferimento deve avvenire tra le 4 e le 7
+        if condition or c.debug_transfer:                               #Condizione di trasferimento, modificabile (se il trasferimento è tra le 4 o le 7 o se ci sta il debug transfer=!)
             if c.transferedToday == 0 or c.debug_transfer:              #Se oggi il trasferimento non è avvenuto
                 startTransferData(ch)                                   #Avvia trasferimento
             c.transferedToday = 1                                       #Flag che segna l'avvenuto trasferimento di oggi
@@ -56,7 +56,7 @@ def sensing(ch):
             measure_ultraportable(ch, conn, location_name)                 #cattura lancia la funzione corrispondente
         elif c.device_type == "MS2090A" or c.device_type == "rack":
             condition = (iq_hour != datetime.datetime.now().hour)
-            if (c.iq_mode == 1 or condition) and c.iq_mode!=-1:
+            if c.iq_mode == 1 or condition:
                 iq_measure_rack(ch, conn, location_name)
                 iq_hour = datetime.datetime.now().hour
             else:
@@ -66,16 +66,19 @@ def sensing(ch):
 def consume_thread():
     connection = pika.BlockingConnection(pika.ConnectionParameters(c.pika_params, heartbeat=10))
     channel = connection.channel()
-
+#Viene dichiarata una coda chiamata 'T-S' utilizzata per trasferire dati da transfer a sensing
     channel.queue_declare(queue='T-S')
 
+#I messaggi che arrivano sulla coda vengono processati dalla funzione callback_transfer_data
     channel.basic_consume(queue='T-S',
                           auto_ack=True,
                           on_message_callback=callback_transfer_data)
 
     print_in_log("Inizio consume")
     try:
+        #inizia il ciclo infinito di consuming su quella coda
         channel.start_consuming()
+        #: Se  si interrompe il processo da tastiera ( usando Ctrl + C), viene catturata l'eccezione KeyboardInterrupt e viene registrato l'evento nel log.
     except KeyboardInterrupt:
         print_in_log(' [x] Consumatore interrotto.')
 
@@ -92,13 +95,15 @@ def sensing_init():
 
     channel = connection.channel()
 
+ #inizializza le code  tra sensing-processing sensing-transfer sensing-watchdog
     channel.queue_declare(queue='S-P')
 
     channel.queue_declare(queue='S-T')
     channel.queue_declare(queue='S-W')
+    pingToWatchdog(channel)
     try:
         print_in_log("Sensing microservice ON")
-
+        
         start_consuming_thread()
         sensing(channel)
     except InterruptedError:

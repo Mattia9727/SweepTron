@@ -1,5 +1,4 @@
 import json
-import os
 
 #data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
@@ -18,7 +17,7 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
 
 lock_file = False
 error_lock_file = False
-force_if_gain = False
+force_if_gain = True
 
 
 def update_all():
@@ -101,18 +100,5 @@ def update_all():
     location = constants["location"]
 
     force_if_gain = constants["force_if_gain"]
-
-    if not os.path.exists(logs_dir):
-        # Create a new directory
-        os.makedirs(logs_dir)
-
-    if not os.path.exists(measures_dir):
-        # Create a new directory
-        os.makedirs(measures_dir)
-
-    if not os.path.exists(iq_measures_dir):
-        # Create a new directory
-        os.makedirs(iq_measures_dir)
-
 
 update_all()
