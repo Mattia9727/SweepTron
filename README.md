@@ -14,7 +14,7 @@
    pip install -r requirements.txt
    ```
 
-4. Lanciare lo script *build_all_services_onedir.bat*, situato nella root della repository (attenzione a modificare i path nello script in modo opportuno):
+4. Lanciare lo script *build_all_services_onedir.bat*, situato nella root della repository (attenzione a modificare i path nello script in modo opportuno e creare anticipatamente la cartella onedirs):
 
   ```
   .\build_all_services_onedir.bat
