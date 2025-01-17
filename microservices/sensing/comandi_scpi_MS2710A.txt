@@ -1,0 +1,78 @@
+
+
+#comandi per configurazione e non solo
+sens:freq:start 811 MHz #ci sono già, imposta frequenza di partenza
+sens:freq:stop 821 MHz #ci sono già, imposta frequenza di fine
+sens:band:res:auto 0 #resolution bandwidth, determina la granularità sull asse delle x della traccia, modalità auto DA INSERIRE
+sens:band:vid:auto 0 #video bandwidth, fa smooth della traccia eliminando rumore termico, modalità auto DA INSERIRE
+sens:band:res 100000  #Hz
+sens:band:vid 300000
+
+#comandi per la singola acquisizione
+:CONFigure:CHPower
+trac1:type NORM #questo mettein mode normal
+init:imm #comando initiate
+trac1:type AVER
+sens:aver:coun 1000
+:INIT:IMM:ALL #initiate per tutte le medie
+#usiamo wait()
+FETCH:CHP:CHP?
+
+#usare configurazione con la funzione wait di wait(), tempo di attesa=4 secondi
+
+
+
+
+%%%%comandi per fare la query sui registri
+
+import pyvisa
+import time
+
+# Inizializzazione dell'interfaccia VISA
+rm = pyvisa.ResourceManager()
+
+# Sostituisci 'TCPIP0::192.168.1.100::INSTR' con l'indirizzo VISA del tuo strumento
+instrument = rm.open_resource('TCPIP0::192.168.1.100::INSTR')
+
+# Impostazione delle terminazioni e timeout
+instrument.timeout = 10000  # Timeout di 10 secondi
+instrument.write_termination = '\n'
+instrument.read_termination = '\n'
+
+# Invio del comando SCPI per selezionare LTE-TDD
+instrument.write(":INSTRument:SELect LTETDD")
+
+# Attendere che l'operazione sia completata
+num = 0
+while num == 0:
+    response = instrument.query("*OPC?")  # Il comando *OPC? restituisce '1' se completato
+    num = int(response.strip())           # Converte la risposta in intero
+    time.sleep(0.1)  # Piccola pausa per ridurre il carico sulla CPU
+
+print("Operazione completata.")
+
+# Chiudi la comunicazione con lo strumento
+instrument.close()
+
+
+%%%%%%comandi scpi settimio%%%%
+%syst:pres 
+sens:freq:star 811 MHz  %legge dal file di conf
+sens:freq:stop 821 MHz  %file di conf
+
+sens:band:res 100 KHz
+sens:band:vid 300 KHz
+conf:chp 
+trac1:type NORM #questo mettein mode normal 
+init:imm #comando initiate
+trac1:type max  %imposta la traccia al massimo 
+calc:mark1:max %aggiunge un marker nel punto di massimo
+calc:mark1:y? %restituisce il valore dell asse y (potenza segnale) in corrispondenza del marker
+disp:wind:trac:y:scal:rlev -42.63 (y+20)  % aggiungiamo 20db rispetto al valore di massimo 
+trac1:type aver
+:TRAC:DET RMS  %imposta il detector in modalità rms (regola la singola acquisione delle mille tracce che vengono mediate)
+sens:aver:coun 1000
+:init:imm:all
+*wai
+fetch:chpower:chp?
+-52.9854
