@@ -6,7 +6,7 @@ import time
 import pika
 
 from my_utils.log_utils import print_in_log
-from my_utils.sensing_utils import measure_ultraportable, measure_rack, interp_af, iq_measure_rack,measure_monitoring_unit
+from my_utils.sensing_utils import measure_ultraportable, measure_rack, interp_af, interp_ac, iq_measure_rack,measure_monitoring_unit
 from my_utils.mq_utils import callback_transfer_data, startTransferData, pingToWatchdog, stopToWatchdog, send_error_log
 from my_utils.anritsu_conn_utils import general_setup_connection_to_device, get_error
 
@@ -17,7 +17,8 @@ def sensing(ch):
     # Crea un socket
     # find_device()
     conn,location_name = general_setup_connection_to_device() #fa il setup generale. INCLUDE ALCUNI COMANDI SCPI!!!
-    c.antenna_factor = interp_af(c.frequency_center)            #Recupera antenna factor (per ultraportable)
+    c.antenna_factor = interp_af(c.frequency_center)  
+    c.cable_att=interp_ac(c.frequency_center)          #Recupera antenna factor (per ultraportable)
     iq_hour = datetime.datetime.now().hour       
     if (iq_hour<7): transfer_day = 0
     else: transfer_day = 1

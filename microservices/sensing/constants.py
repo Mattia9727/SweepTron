@@ -10,7 +10,7 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
     processed_iq_measures_dir = error_log_file = log_file = log_iq_file = compressed_log_file = \
     compressed_iq_log_file = transmission_freq = transmission_freq_used = transferedToday = \
     isTransfering = device_type = debug_transfer = server_ip = url = error_url = location = \
-    spectrum_analyzer_ip = spectrum_analyzer_port = antenna_file = af_keysight = initial_reference_level = \
+    spectrum_analyzer_ip = spectrum_analyzer_port = antenna_file = af_keysight = ac_anritsu = initial_reference_level = \
     y_ticks = command_rolling_average_time = inter_sample_time = number_samples_chp = samples_for_averages = \
     frequency_start = frequency_stop = iq_frequency_start = iq_frequency_stop = \
     num_frequencies = iq_num_frequencies = frequency_center = iq_frequency_center = minimum_level_no_pre_amp = \
@@ -28,7 +28,7 @@ def update_all():
         processed_iq_measures_dir, error_log_file, log_file, log_iq_file, compressed_log_file,  \
         compressed_iq_log_file, transmission_freq, transmission_freq_used,  transferedToday,  \
         isTransfering, device_type, debug_transfer, server_ip, url, error_url, location, lock_file, \
-        spectrum_analyzer_ip, spectrum_analyzer_port, antenna_file, af_keysight, initial_reference_level, y_ticks, \
+        spectrum_analyzer_ip, spectrum_analyzer_port, antenna_file, af_keysight, ac_anritsu, initial_reference_level, y_ticks, \
         command_rolling_average_time, inter_sample_time, number_samples_chp, samples_for_averages, iq_num_frequencies, \
         frequency_start, frequency_stop, iq_frequency_start, iq_frequency_stop, \
         num_frequencies, frequency_center, iq_frequency_center, minimum_level_no_pre_amp, initial_guard_amplitude, \
@@ -65,6 +65,7 @@ def update_all():
     pika_params = constants["pika_params"]
     antenna_file = constants["antenna_file"]
     af_keysight = data_folder+"\\"+ constants["af_keysight"]
+    ac_anritsu= data_folder+"\\"+ constants["ac_anritsu"]
 
     initial_reference_level = constants["initial_reference_level"]
     y_ticks = constants["y_ticks"]

@@ -13,7 +13,7 @@ TCP_IP = '10.0.0.2' #PER ANALIZZATORE ARPA
 
 # TCP_PORT = 9001
 #TCP_PORT = 59001              #Per ultraportable
-TCP_PORT = 9001     #PER NALIZZATORE ARPA MS2710A
+TCP_PORT = 9001     #PER ANALIZZATORE ARPA MS2710A
 BUFFER_SIZE = 8192
 TIMEOUT = 10  # amount of time in s between one command and the following time
 
@@ -204,7 +204,7 @@ def general_setup_connection_to_device():
         setup_anritsu_device_rack(conn)
     elif c.device_type == "MS2760A" or c.device_type == "ultraportable":
         setup_anritsu_device_ultraportable(conn)
-   # elif c.device_type == "MS27102A" :
-    #    setup_anritsu_device_MS27102A(conn)
+    elif c.device_type == "MS27102A" :
+        setup_anritsu_device_MS27102A(conn)
 
     return conn, location_name

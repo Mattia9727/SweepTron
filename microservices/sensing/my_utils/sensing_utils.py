@@ -2,6 +2,7 @@ import datetime
 import math
 import os
 
+
 from math import sqrt
 
 import numpy as np
@@ -17,41 +18,53 @@ from .log_utils import print_in_log
 from .mq_utils import pingToWatchdog
 
 
+def interp_ac(freqs):
+    ac_anritsu = np.genfromtxt(c.ac_anritsu, delimiter=';', skip_header=1) #legge dal fil .csv
+    freq_mhz = ac_anritsu[:, 0] #sono in MHz
+    ac_values = ac_anritsu[:, 1]
+    ac_sel_frequencies=np.interp(freqs,freq_mhz,ac_values)
+    return ac_sel_frequencies #ritorna il vettore con i valori selezionati per ogni frequenza centrale data in input
 
 def interp_af(freqs):
 
     # Carica i dati dal file di testo
-    af_keysight = np.loadtxt(c.af_keysight)
+    af_keysight = np.genfromtxt(c.af_keysight, delimiter=';', skip_header=1)
 
-    # Estrai le frequenze in kHz dalla prima colonna
-    freq_mhz = af_keysight[:, 0] * 1000
+
+    # Estrai le frequenze in MHz dalla prima colonna
+    freq_mhz = af_keysight[:, 0]  # Converti da MHz a kHz
+    af_values = af_keysight[:, 1] 
 
     # Trova il valore minimo e massimo delle frequenze
-    min_freq = np.min(freq_mhz)
-    max_freq = np.max(freq_mhz)
+   #min_freq = np.min(freq_mhz)
+    #max_freq = np.max(freq_mhz)
 
     # Crea un vettore di frequenze interpolate
-    step = 0.5  # Passo dell'interpolazione
-    freq_interp = np.arange(min_freq, max_freq + step, step) # creare un array di valori equispaziati a partire da min_freq fino a max_freq, con un passo di interpolazione pari a step (0.5 in questo caso)
+    #step = 0.5  # Passo dell'interpolazione
+    #freq_interp = np.arange(min_freq, max_freq + step, step) # creare un array di valori equispaziati a partire da min_freq fino a max_freq, con un passo di interpolazione pari a step (0.5 in questo caso)
 
     # Esegui l'interpolazione lineare
-    af_interp = np.interp(freq_interp, freq_mhz, af_keysight[:, 1])
+    #af_interp = np.interp(freq_interp, freq_mhz, af_keysight[:, 1])
 
     # Inizializza un array per le ampiezze selezionate
-    af_sel_frequencies = np.zeros(len(freqs))
+    #af_sel_frequencies = np.zeros(len(freqs))
+
+    #vettore contenente gli AF relativi alle frequenze dei canali da scannerizzare
+    af_sel_frequencies=np.interp(freqs,freq_mhz,af_values)
 
     # Seleziona le ampiezze corrispondenti alle frequenze numeriche
-    for i, freq in enumerate(freqs):
-        index = np.where(freq_interp == freq)[0]
-        if len(index) > 0:
-            af_sel_frequencies[i] = af_interp[index[0]]
+    #for i, freq in enumerate(freqs):
+    #    index = np.where(freq_interp == freq)[0]
+    #    if len(index) > 0:
+    #        af_sel_frequencies[i] = af_interp[index[0]]
 
     # af_sel_frequencies contiene le ampiezze selezionate
     return af_sel_frequencies #ritorna il vettore con i valori selezionati per ogni frequenza centrale data in input
 
 
-def calculate_vm_from_dbm(dbm,af):
-    return (1/sqrt(20))*10**((float(dbm)+float(af))/20)
+def calculate_vm_from_dbm(dbm,af,ac):
+    #return (1/sqrt(20))*10**((float(dbm)+float(af))/20)
+    return 10**((float(dbm)+float(ac)+float(af)-13.01)/20)
 
 def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_marker, freq_start):
     max_marker = -200
@@ -408,7 +421,7 @@ def measure_monitoring_unit(ch, conn, location_name):
                 conn, _ = general_setup_connection_to_device()
                 i-=1
                 continue
-            emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.antenna_factor[f])
+            emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.antenna_factor[f],c.ac_anritsu[f])
             emf_measured_dbmm2 = vm_to_dbmm2(emf_measured_vm)
             measured_emf_matrix_base_station[f, i] = float(emf_measured_vm)
             time_array[f, i] = datetime.datetime.now()
