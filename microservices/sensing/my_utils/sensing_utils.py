@@ -23,21 +23,11 @@ import logging
 
 # Imposta il file di log
 LOG_FILE = "C:\\Users\\pc\\Desktop\\SweepTron_Sensing_sens_utils.log"
-
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-
-
 class Logger(object):
     def __init__(self, log_file):
-        self.terminal = sys.stdout
         self.log = open(log_file, "a")
 
     def write(self, message):
-        self.terminal.write(message)
         self.log.write(message)
         self.log.flush()  
 
@@ -45,7 +35,10 @@ class Logger(object):
         pass  # Necessario per compatibilità con stdout
 
 sys.stdout = Logger(LOG_FILE)
-sys.stderr = Logger(LOG_FILE)
+
+print(" SweepTron_Sensing: Il servizio è stato avviato!")
+sys.stdout.flush() 
+
 
 def interp_ac(freqs):
     ac_anritsu = np.genfromtxt(c.ac_anritsu, delimiter=';', skip_header=1) #legge dal fil .csv
@@ -393,6 +386,7 @@ def measure_monitoring_unit(ch, conn, location_name):
     send_command(conn, 'syst:pres\n')
 
     print("ho fatto il preset dello strumento")
+    sys.stdout.flush() 
 
     for f in range(c.num_frequencies):
         pingToWatchdog(ch)
@@ -419,6 +413,7 @@ def measure_monitoring_unit(ch, conn, location_name):
         for i in range(c.number_samples_chp): #ciclo per il numero di volte (campioni) che decido io nel file di conf
             
             print("sono nel for di number_samples_chp")
+            sys.stdout.flush() 
             #passo in mode normal 
             send_command(conn,'trac1:type NORM\n')
             send_command(conn,':CONFigure:CHPower\n') #configuro il channel power
@@ -448,6 +443,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             # Loop di polling per controllare ESR finché OPC non è impostato
 
             print("sto entrando nel ciclo di polling")
+            sys.stdout.flush() 
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
                 if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
@@ -455,10 +451,12 @@ def measure_monitoring_unit(ch, conn, location_name):
                 time.sleep(0.1)  # Attendi 100ms prima di controllare di nuovo
             
             print("sono uscito dal ciclo di polling")
+            sys.stdout.flush() 
             #fetch del valore
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n') 
 
             print("ho fatto il fetch") 
+            sys.stdout.flush() 
 
             if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
                 print_in_log("Problema valore CHP, reset connessione e riprovo misurazione...")

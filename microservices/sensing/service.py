@@ -31,16 +31,8 @@ import time
 import servicemanager
 import win32service
 import win32serviceutil
-import logging
 
 from main import sensing_init
-
-LOG_FILE = "C:\\SweepTron_Sensing_reporting.log"
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
 
 class MyService:
 
@@ -53,15 +45,10 @@ class MyService:
         """Main service loop. This is where work is done!"""
         self.running = True
         while self.running:
-            logging.info("Service is running...")
-            servicemanager.LogInfoMsg("Service running...")  # Scrive nei registri eventi Windows
-            try:
-                sensing_init()  
-            except Exception as e:
-                logging.error(f"error during sensing_init(): {e}", exc_info=True)
-
-            time.sleep(10)  # Attende 10 secondi
-        
+            time.sleep(10)  # Important work
+            servicemanager.LogInfoMsg("Service running...")
+            sensing_init()
+            self.stop()
 
 
 class MyServiceFramework(win32serviceutil.ServiceFramework):
