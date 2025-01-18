@@ -3,8 +3,8 @@ import numpy as np
 import json
 
 #data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
-data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
-
+#data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+data_folder = "C:\\Users\\pc" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 
 print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir = settings_path = sensing_activity = \
     processing_activity = transfer_activity = pika_params = service_log_file = disable_restart = \
@@ -49,5 +49,9 @@ def update_all():
 
     transferedToday = constants["transferedToday"]
     isTransfering = constants["isTransfering"]
+
+    if not os.path.exists(processed_iq_measures_dir):
+        # Create a new directory
+        os.makedirs(processed_iq_measures_dir)
 
 update_all()

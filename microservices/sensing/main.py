@@ -12,13 +12,45 @@ from my_utils.anritsu_conn_utils import general_setup_connection_to_device, get_
 
 import constants as c
 
+import sys
+import logging
+
+# Imposta il file di log
+LOG_FILE = "C:\\Users\\pc\\Desktop\\SweepTron_Sensing_main.log"
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+
+class Logger(object):
+    def __init__(self, log_file):
+        self.terminal = sys.stdout
+        self.log = open(log_file, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()  
+
+    def flush(self):
+        pass  # Necessario per compatibilità con stdout
+
+sys.stdout = Logger(LOG_FILE)
+sys.stderr = Logger(LOG_FILE)
 
 def sensing(ch):
     # Crea un socket
     # find_device()
     conn,location_name = general_setup_connection_to_device() #fa il setup generale. INCLUDE ALCUNI COMANDI SCPI!!!
-    c.antenna_factor = interp_af(c.frequency_center)  
+    print("general_setup_connection...\n")
+    c.antenna_factor = interp_af(c.frequency_center) 
+    print("frequency center",c.frequency_center) 
+    print("AF",c.antenna_factor)
     c.cable_att=interp_ac(c.frequency_center)          #Recupera antenna factor (per ultraportable)
+    print("CABLE_ATT",c.cable_att)
     iq_hour = datetime.datetime.now().hour       
     if (iq_hour<7): transfer_day = 0
     else: transfer_day = 1

@@ -18,6 +18,35 @@ from .log_utils import print_in_log
 from .mq_utils import pingToWatchdog
 
 
+import sys
+import logging
+
+# Imposta il file di log
+LOG_FILE = "C:\\Users\\pc\\Desktop\\SweepTron_Sensing_sens_utils.log"
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+
+class Logger(object):
+    def __init__(self, log_file):
+        self.terminal = sys.stdout
+        self.log = open(log_file, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()  
+
+    def flush(self):
+        pass  # Necessario per compatibilità con stdout
+
+sys.stdout = Logger(LOG_FILE)
+sys.stderr = Logger(LOG_FILE)
+
 def interp_ac(freqs):
     ac_anritsu = np.genfromtxt(c.ac_anritsu, delimiter=';', skip_header=1) #legge dal fil .csv
     freq_mhz = ac_anritsu[:, 0] #sono in MHz
@@ -363,9 +392,10 @@ def measure_monitoring_unit(ch, conn, location_name):
     #faccio il preset dello strumento
     send_command(conn, 'syst:pres\n')
 
+    print("ho fatto il preset dello strumento")
+
     for f in range(c.num_frequencies):
         pingToWatchdog(ch)
-
 
         curr_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         print_in_log("Current Frequency: {}, Starting time: {}".format(c.frequency_center[f], curr_timestamp))
@@ -388,6 +418,7 @@ def measure_monitoring_unit(ch, conn, location_name):
 
         for i in range(c.number_samples_chp): #ciclo per il numero di volte (campioni) che decido io nel file di conf
             
+            print("sono nel for di number_samples_chp")
             #passo in mode normal 
             send_command(conn,'trac1:type NORM\n')
             send_command(conn,':CONFigure:CHPower\n') #configuro il channel power
@@ -410,9 +441,24 @@ def measure_monitoring_unit(ch, conn, location_name):
             send_command(conn, samples_for_averages_str)
             send_command(conn, ':init:imm:all\n')
             #attendo di fare il fetch fino a che il comando precedente non ha terminato
-            send_command(conn, '*wai\n')
+            #send_command(conn, '*wai\n')
+
+            # Imposta OPC quando la misura è completata
+            send_command(conn,'*OPC\n')
+            # Loop di polling per controllare ESR finché OPC non è impostato
+
+            print("sto entrando nel ciclo di polling")
+            while True:
+                esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
+                if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
+                    break  # Esce dal loop quando ESR=1
+                time.sleep(0.1)  # Attendi 100ms prima di controllare di nuovo
+            
+            print("sono uscito dal ciclo di polling")
             #fetch del valore
-            emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n')  
+            emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n') 
+
+            print("ho fatto il fetch") 
 
             if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
                 print_in_log("Problema valore CHP, reset connessione e riprovo misurazione...")

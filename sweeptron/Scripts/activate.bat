@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\master\Desktop\Progetto Iot\SweepTron-main_new2\sweeptron
+set VIRTUAL_ENV=C:\Users\master\Desktop\progetto_chiaraviglio\Progetto_Iot\SweepTron-main_new2\sweeptron
 
 if not defined PROMPT set PROMPT=$P$G
 

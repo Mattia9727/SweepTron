@@ -1,7 +1,8 @@
 import json
 
 #data_folder = "C:\\Users\\matti" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
-data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+#data_folder = "C:\\Users\\user" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
+data_folder = "C:\\Users\\pc" + "\\" + 'Desktop' + "\\" + 'SweeptronData'
 
 print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir = settings_path = sensing_activity = \
         processing_activity = transfer_activity = pika_params = service_log_file = disable_restart = None
