@@ -437,13 +437,15 @@ def measure_monitoring_unit(ch, conn, location_name):
             send_command(conn, ':init:imm:all\n')
             #attendo di fare il fetch fino a che il comando precedente non ha terminato
             #send_command(conn, '*wai\n')
-
+            print("sto per eseguire il comando OPC")
+            sys.stdout.flush() 
             # Imposta OPC quando la misura è completata
             send_command(conn,'*OPC\n')
             # Loop di polling per controllare ESR finché OPC non è impostato
 
             print("sto entrando nel ciclo di polling")
             sys.stdout.flush() 
+
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
                 if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
