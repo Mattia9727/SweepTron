@@ -465,9 +465,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             print("sto entrando nel ciclo di polling")
             sys.stdout.flush() 
 
-            print("valore flag", int(get_message(conn,'*ESR?\n')))
-            sys.stdout.flush()
-
+            
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
                 print("valore flag", esr_value)
