@@ -540,7 +540,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             # else:
             print("sto scrivendo nel file di log")
             sys.stdout.flush() 
-            log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], float(emf_measured_chp.split("\n",1)[0]), 
+            log_file.write('{} {} {} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], float(emf_measured_chp.split("\n",1)[0]), float(c.af_factor[f]), float(c.ac_factor[f]),
                                              round(measured_emf_matrix_base_station[f, i],3)))
             print("scritto nel file di log")
             sys.stdout.flush() 
