@@ -538,7 +538,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             #         datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #         measured_emf_matrix_base_station[f, i]))
             # else:
-            log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],round(emf_measured_chp,3),c.af_factor[f],c.ac_factor[f],
+            log_file.write('{} {} {} {} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], round(emf_measured_chp,3), c.af_factor[f], c.ac_factor[f],
                                                round(measured_emf_matrix_base_station[f, i],3)))
 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
