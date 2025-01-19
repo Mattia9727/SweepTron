@@ -43,8 +43,9 @@ sys.stdout.flush()
 def interp_ac(freqs):
     ac_anritsu = np.genfromtxt(c.ac_anritsu, delimiter=';', skip_header=1) #legge dal fil .csv
     freq_mhz = ac_anritsu[:, 0] #sono in MHz
+    freq_hz = freq_mhz * 10**6 #converto in Hz
     ac_values = ac_anritsu[:, 1]
-    ac_sel_frequencies=np.interp(freqs,freq_mhz,ac_values)
+    ac_sel_frequencies=np.interp(freqs,freq_hz,ac_values)
     return ac_sel_frequencies #ritorna il vettore con i valori selezionati per ogni frequenza centrale data in input
 
 def interp_af(freqs):
@@ -53,8 +54,9 @@ def interp_af(freqs):
     af_keysight = np.genfromtxt(c.af_keysight, delimiter=';', skip_header=1)
 
 
-    # Estrai le frequenze in MHz dalla prima colonna
-    freq_mhz = af_keysight[:, 0]  # Converti da MHz a kHz
+    # Estrai le frequenze in MHz dalla prima colonna e converti in hertz
+    freq_mhz = af_keysight[:, 0]
+    freq_hz = freq_mhz * 10**6 #converto in Hz
     af_values = af_keysight[:, 1] 
 
     # Trova il valore minimo e massimo delle frequenze
@@ -72,7 +74,7 @@ def interp_af(freqs):
     #af_sel_frequencies = np.zeros(len(freqs))
 
     #vettore contenente gli AF relativi alle frequenze dei canali da scannerizzare
-    af_sel_frequencies=np.interp(freqs,freq_mhz,af_values)
+    af_sel_frequencies=np.interp(freqs,freq_hz,af_values)
 
     # Seleziona le ampiezze corrispondenti alle frequenze numeriche
     #for i, freq in enumerate(freqs):
