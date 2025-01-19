@@ -40,13 +40,13 @@ def sensing(ch):
     conn,location_name = general_setup_connection_to_device() #fa il setup generale. INCLUDE ALCUNI COMANDI SCPI!!!
     print("general_setup_connection...\n")
     sys.stdout.flush() 
-    c.af_keysight = interp_af(c.frequency_center) 
+    c.af_factor = interp_af(c.frequency_center) 
     print("frequency center",c.frequency_center) 
     sys.stdout.flush() 
-    print("AF",c.af_keysight)
+    print("AF",c.af_factor)
     sys.stdout.flush() 
-    c.ac_anritsu=interp_ac(c.frequency_center)          #Recupera antenna factor (per ultraportable)
-    print("CABLE_ATT",c.ac_anritsu)
+    c.ac_factor=interp_ac(c.frequency_center)          #Recupera antenna factor (per ultraportable)
+    print("CABLE_ATT",c.ac_factor)
     sys.stdout.flush() 
     iq_hour = datetime.datetime.now().hour       
     if (iq_hour<7): transfer_day = 0
