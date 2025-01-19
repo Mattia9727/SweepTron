@@ -466,8 +466,9 @@ def measure_monitoring_unit(ch, conn, location_name):
             sys.stdout.flush() 
             
             
-
-            #time.sleep(3) #attende un tempo di base di 3 sec
+            start_time = time.time()  
+            timeout = 15
+            
             while True:
                 first_val_esr = int(get_message(conn, '*ESR?\n'))
                 print("first_val_esr:", first_val_esr)
@@ -476,10 +477,16 @@ def measure_monitoring_unit(ch, conn, location_name):
                 if first_val_esr == 0:  # Appena diventa 0, esce dal loop
                     break
 
+                if time.time() - start_time > timeout:  
+                    sys.stdout.flush()
+                    break 
+
                 time.sleep(0.5)  # Controlla ogni 0.5 secondi
 
             print(" first_val_esr è ora 0. Inizio polling per valore 1...")
             sys.stdout.flush()
+
+            start_time = time.time()
 
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
@@ -487,6 +494,10 @@ def measure_monitoring_unit(ch, conn, location_name):
                 sys.stdout.flush()
                 if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
                     break  # Esce dal loop quando ESR=1
+                
+                if time.time() - start_time > timeout:  
+                    sys.stdout.flush()
+                    break
                 time.sleep(0.5)  # Attendi 100ms prima di controllare di nuovo
             
             print("sono uscito dal ciclo di polling, valore flag è", esr_value)
@@ -494,7 +505,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             #fetch del valore
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n') 
 
-            print("ho fatto il fetch") 
+            print("ho fatto il fetch", emf_measured_chp) 
             sys.stdout.flush() 
 
             if emf_measured_chp == "" or len(emf_measured_chp.split("\n"))>2:
