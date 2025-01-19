@@ -426,14 +426,20 @@ def measure_monitoring_unit(ch, conn, location_name):
             sys.stdout.flush() 
             #imposta la traccia al massimo 
             send_command(conn,'trac1:type max\n')
+            print("trac1:type max")
+            sys.stdout.flush() 
             #aggiunge un marker nel punto di massimo
             send_command(conn,'calc:mark1:max\n')
+            print("calc mark1 max")
+            sys.stdout.flush() 
             #restituisce il valore dell asse y (potenza segnale) in corrispondenza del marker
             max_marker=get_message(conn,'calc:mark1:y?\n')
+            print("max_marker", max_marker)
+            sys.stdout.flush() 
             #aggiungiamo 20db rispetto al valore di massimo 
             new_ref_lev='disp:wind:trac:y:scal:rlev {}\n'.format(max_marker+20)
             send_command(conn,new_ref_lev)
-            print("impostata reference lev")
+            print("impostata reference lev",new_ref_lev)
             sys.stdout.flush() 
             #passiamo in modalità average
             send_command(conn,'trac1:type aver\n')
