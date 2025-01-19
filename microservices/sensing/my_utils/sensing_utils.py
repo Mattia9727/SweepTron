@@ -527,7 +527,7 @@ def measure_monitoring_unit(ch, conn, location_name):
 
             if c.print_debug > 0:
                 print_in_log('{} - {} - {} - {}'.format(
-                            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],emf_measured_chp,
+                            datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],float(emf_measured_chp.split("\n",1)[0]),
                             measured_emf_matrix_base_station[f, i]))
             while c.lock_file == True:
                 time.sleep(0.01)
@@ -538,9 +538,12 @@ def measure_monitoring_unit(ch, conn, location_name):
             #         datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],
             #         measured_emf_matrix_base_station[f, i]))
             # else:
-            log_file.write('{} {} {} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], round(emf_measured_chp,3), c.af_factor[f], c.ac_factor[f],
-                                               round(measured_emf_matrix_base_station[f, i],3)))
-
+            print("sto scrivendo nel file di log")
+            sys.stdout.flush() 
+            log_file.write('{} {} {} {}\n'.format(datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f], float(emf_measured_chp.split("\n",1)[0]), 
+                                             round(measured_emf_matrix_base_station[f, i],3)))
+            print("scritto nel file di log")
+            sys.stdout.flush() 
             # csv_file.write('{},{},{}\n'.format(datetime.datetime.now().strftime('%H:%M:%S'), c.frequency_center[f],
             #                                    measured_emf_matrix_base_station[f, i]))
             log_file.close()
