@@ -434,8 +434,9 @@ def measure_monitoring_unit(ch, conn, location_name):
             sys.stdout.flush() 
             #restituisce il valore dell asse y (potenza segnale) in corrispondenza del marker
             max_marker=get_message(conn,'calc:mark1:y?\n')
-            print("max_marker", max_marker)
+            print("max_marker", max_marker,type(max_marker))
             sys.stdout.flush() 
+            max_marker=float(max_marker)
             #aggiungiamo 20db rispetto al valore di massimo 
             new_ref_lev='disp:wind:trac:y:scal:rlev {}\n'.format(max_marker+20)
             send_command(conn,new_ref_lev)
