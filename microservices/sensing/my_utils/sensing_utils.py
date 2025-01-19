@@ -449,7 +449,7 @@ def measure_monitoring_unit(ch, conn, location_name):
             send_command(conn,':TRAC:DET RMS\n') #imposta il detector in modalità rms (regola la singola acquisione delle mille tracce che vengono mediate)
             print("DET RMS")
             sys.stdout.flush() 
-            samples_for_averages_str = ':SENS:AVER:COUN {}\n'.format(c.samples_for_averages) #imposta il numero di medie 
+            samples_for_averages_str = ':SENS:AVER:COUN {}\n'.format(int(c.samples_for_averages)) #imposta il numero di medie 
             send_command(conn, samples_for_averages_str)
             print("eseguito sens:aver:count")
             sys.stdout.flush() 
@@ -465,14 +465,14 @@ def measure_monitoring_unit(ch, conn, location_name):
             print("sto entrando nel ciclo di polling")
             sys.stdout.flush() 
 
-            
+            time.sleep(3) #attende un tempo di base di 3 sec
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
                 print("valore flag", esr_value)
                 sys.stdout.flush()
                 if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
                     break  # Esce dal loop quando ESR=1
-                time.sleep(1)  # Attendi 100ms prima di controllare di nuovo
+                time.sleep(0.5)  # Attendi 100ms prima di controllare di nuovo
             
             print("sono uscito dal ciclo di polling, valore flag è", esr_value)
             sys.stdout.flush() 
