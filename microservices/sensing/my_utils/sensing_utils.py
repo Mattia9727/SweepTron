@@ -464,8 +464,23 @@ def measure_monitoring_unit(ch, conn, location_name):
 
             print("sto entrando nel ciclo di polling")
             sys.stdout.flush() 
+            
+            
 
-            time.sleep(3) #attende un tempo di base di 3 sec
+            #time.sleep(3) #attende un tempo di base di 3 sec
+            while True:
+                first_val_esr = int(get_message(conn, '*ESR?\n'))
+                print("first_val_esr:", first_val_esr)
+                sys.stdout.flush()
+
+                if first_val_esr == 0:  # Appena diventa 0, esce dal loop
+                    break
+
+                time.sleep(0.5)  # Controlla ogni 0.5 secondi
+
+            print(" first_val_esr è ora 0. Inizio polling per valore 1...")
+            sys.stdout.flush()
+
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
                 print("valore flag", esr_value)
