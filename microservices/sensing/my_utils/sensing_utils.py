@@ -416,9 +416,14 @@ def measure_monitoring_unit(ch, conn, location_name):
             sys.stdout.flush() 
             #passo in mode normal 
             send_command(conn,'trac1:type NORM\n')
+            print("trac1:NORM")
+            sys.stdout.flush() 
             send_command(conn,':CONFigure:CHPower\n') #configuro il channel power
+            print("configurato ch power")
+            sys.stdout.flush() 
             send_command(conn,'init:imm\n')
-
+            print("mandato primo init")
+            sys.stdout.flush() 
             #imposta la traccia al massimo 
             send_command(conn,'trac1:type max\n')
             #aggiunge un marker nel punto di massimo
@@ -428,12 +433,19 @@ def measure_monitoring_unit(ch, conn, location_name):
             #aggiungiamo 20db rispetto al valore di massimo 
             new_ref_lev='disp:wind:trac:y:scal:rlev {}\n'.format(max_marker+20)
             send_command(conn,new_ref_lev)
-
+            print("impostata reference lev")
+            sys.stdout.flush() 
             #passiamo in modalità average
             send_command(conn,'trac1:type aver\n')
+            print("trac1:type aver")
+            sys.stdout.flush() 
             send_command(conn,':TRAC:DET RMS\n') #imposta il detector in modalità rms (regola la singola acquisione delle mille tracce che vengono mediate)
+            print("DET RMS")
+            sys.stdout.flush() 
             samples_for_averages_str = ':SENS:AVER:COUN {}\n'.format(c.samples_for_averages) #imposta il numero di medie 
             send_command(conn, samples_for_averages_str)
+            print("eseguito sens:aver:count")
+            sys.stdout.flush() 
             send_command(conn, ':init:imm:all\n')
             #attendo di fare il fetch fino a che il comando precedente non ha terminato
             #send_command(conn, '*wai\n')
