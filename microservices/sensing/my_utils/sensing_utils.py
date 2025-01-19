@@ -467,11 +467,13 @@ def measure_monitoring_unit(ch, conn, location_name):
 
             while True:
                 esr_value = int(get_message(conn,'*ESR?\n'))  # Interroga il registro ESR
+                print("valore flag", esr_value)
+                sys.stdout.flush()
                 if esr_value & 1:  # Controlla se il bit OPC è impostato (bit 0)
                     break  # Esce dal loop quando ESR=1
                 time.sleep(0.1)  # Attendi 100ms prima di controllare di nuovo
             
-            print("sono uscito dal ciclo di polling")
+            print("sono uscito dal ciclo di polling, valore flag è", esr_value)
             sys.stdout.flush() 
             #fetch del valore
             emf_measured_chp = get_message(conn, ':FETCH:CHP:CHP?\n') 
@@ -486,7 +488,7 @@ def measure_monitoring_unit(ch, conn, location_name):
                 conn, _ = general_setup_connection_to_device()
                 i-=1
                 continue
-            emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.antenna_factor[f],c.ac_anritsu[f])
+            emf_measured_vm = calculate_vm_from_dbm(emf_measured_chp.split("\n",1)[0],c.af_keysight[f],c.ac_anritsu[f])
             emf_measured_dbmm2 = vm_to_dbmm2(emf_measured_vm)
             measured_emf_matrix_base_station[f, i] = float(emf_measured_vm)
             time_array[f, i] = datetime.datetime.now()
