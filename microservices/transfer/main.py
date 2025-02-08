@@ -90,6 +90,42 @@ def callback_transfer_iq_data(ch, method, properties, body):
     if msg == "OK":
         os.remove(body)
 
+
+#def t_transfer_measure_data(line):
+    #     # Dividi la riga in timestamp, freq, dbmm2, vmvalue
+    #     parts = line.split()
+    #     if len(parts) == 4:
+    #         timestamp, freq, dbmm2value, vmvalue = parts
+    #
+    #         # Invia i dati al server Flask
+    #         ok = False
+    #         for i in range(5):
+    #             response = send_data_to_server(timestamp, float(freq), float(dbmm2value), float(vmvalue))
+    #             if (response == "200"):
+    #                 ok = True
+    #                 break
+    #             else:
+    #                 print_in_log(response)
+    #             time.sleep(1)
+    #         if (not ok):
+    #             file.write(line)
+    #             emptyfile = False
+
+#def t_transfer_error_data(line):
+# Invia i dati al server Flask
+#                 ok = False
+#                 for i in range(5):
+#                     response = send_error_to_server(line)
+#                     if (response == "200"):
+#                         ok = True
+#                         break
+#                     else:
+#                         print_in_log(response)
+#                     time.sleep(1)
+#                 if (not ok):
+#                     file.write(line)
+#                     emptyfile = False
+
 def init_send_simple_data(logfile,transfering_error_log):
     print_in_log("Inizio trasferimento file "+logfile)
     logfile_strings = logfile.rsplit(".", 1)
@@ -102,6 +138,7 @@ def init_send_simple_data(logfile,transfering_error_log):
         for line in lines:
             if not transfering_error_log:
                 # Dividi la riga in timestamp, freq, dbmm2, vmvalue
+                # t_data = threading.Thread(target=t_transfer_measure_data, args=(line,))
                 parts = line.split()
                 if len(parts) == 4:
                     timestamp, freq, dbmm2value, vmvalue = parts
@@ -121,6 +158,7 @@ def init_send_simple_data(logfile,transfering_error_log):
                         emptyfile = False
             else:
                 # Invia i dati al server Flask
+                # t_data = threading.Thread(target=t_transfer_error_data, args=(line,))
                 ok = False
                 for i in range(5):
                     response = send_error_to_server(line)
