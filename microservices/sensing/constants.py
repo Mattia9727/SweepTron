@@ -17,6 +17,7 @@ print_debug = iq_mode = grafici_dir = logs_dir = measures_dir = iq_measures_dir 
 
 lock_file = False
 error_lock_file = False
+force_if_gain = True
 
 
 def update_all():
@@ -29,7 +30,7 @@ def update_all():
         command_rolling_average_time, inter_sample_time, number_samples_chp, samples_for_averages, iq_num_frequencies, \
         frequency_start, frequency_stop, iq_frequency_start, iq_frequency_stop, \
         num_frequencies, frequency_center, iq_frequency_center, minimum_level_no_pre_amp, initial_guard_amplitude, \
-        time_search_for_adjust_ref_level_scale, iq_length_value, iq_length_unit, iq_bits
+        time_search_for_adjust_ref_level_scale, iq_length_value, iq_length_unit, iq_bits, force_if_gain
 
     settings_path = data_folder+"\\"+'config.json'
 
@@ -97,5 +98,7 @@ def update_all():
     iq_bits = constants["iq_bits"]
 
     location = constants["location"]
+
+    force_if_gain = constants["force_if_gain"]
 
 update_all()

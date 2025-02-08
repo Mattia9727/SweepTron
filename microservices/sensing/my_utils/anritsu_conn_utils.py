@@ -25,10 +25,11 @@ def find_device():
         print_in_log(get_message(client_socket, '*IDN?\n'))
     except Exception as e:
         print_in_log("Can't find any device in IP {}, port {} with error:".format(c.spectrum_analyzer_ip, c.spectrum_analyzer_port) + str(e))
-        exit(0)
+        return -1
 
     print_in_log("Device found in IP {}, port {}".format(c.spectrum_analyzer_ip, c.spectrum_analyzer_port))
     client_socket.close()
+    return 0
 
 
 def connect_to_device():
@@ -82,6 +83,7 @@ def get_message(conn, message, wait=-1):
 
 
 def update_error_log(message):
+    print_in_log(message)
     error_log_file_name = c.error_log_file
     error_log_file = open(error_log_file_name, 'a')
     current_timestamp = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -168,7 +170,14 @@ def get_gps_info(conn):
     return location_name
 
 def general_setup_connection_to_device():
-    find_device()
+    import time
+    for i in range(10):
+        ret = find_device()
+        time.sleep(60)
+        if ret==0:
+            break
+    if ret==-1:
+        exit(0)
     conn = connect_to_device()
     location_name = ""
     if c.device_type == "MS2090A" or c.device_type == "rack":

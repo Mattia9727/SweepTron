@@ -113,7 +113,7 @@ def adjust_ref_level_scale_div(conn, curr_margin, time_search_max, y_ticks, min_
     send_command(conn,str_scale_div)  # automatic scale div setting
 
     if c.device_type == "MS2760A" or c.device_type == "ultraportable":
-        if int(max_marker) + if_gain_margin < if_gain_threshold:
+        if (int(max_marker) + if_gain_margin < if_gain_threshold) or c.force_if_gain:
             send_command(conn,":POW:IF:GAIN:STAT ON\n")
         else:
             send_command(conn, ":POW:IF:GAIN:STAT OFF\n")
@@ -294,7 +294,7 @@ def measure_rack(ch, conn, location_name):
             measured_emf_matrix_base_station[f, i] = float(emf_measured_chp)
             time_array[f, i] = datetime.datetime.now()
             emf_in_vm = dbmm2_to_vm(measured_emf_matrix_base_station[f, i])
-            if c.lock_file == True:
+            while c.lock_file == True:
                 time.sleep(0.01)
             c.lock_file = True
             log_file = open(c.log_file, 'a')
@@ -354,7 +354,7 @@ def measure_ultraportable(ch, conn, location_name):
         if c.frequency_center[f] in c.transmission_freq:  # Controllo di frequenza di invio
             c.transmission_freq_used = True
 
-        if c.iq_mode == 1 and c.transmission_freq_used == True and c.isTransfering == True:
+        if c.iq_mode == 1 and c.transmission_freq_used == True and c.isTransfering == True: #TODO: VERIFICARE CON IL PROFESSORE SE FARE CONTROLLO SOLO CON CATTURA IQ O SEMPRE
             print_in_log("Invio dati in IQ_MODE nella frequenza attuale di trasferimento. Passo alla frequenza successiva.")
             continue
 
@@ -384,7 +384,7 @@ def measure_ultraportable(ch, conn, location_name):
                 print_in_log('{} - {} - {} - {}'.format(
                             datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), c.frequency_center[f],emf_measured_dbmm2,
                             measured_emf_matrix_base_station[f, i]))
-            if c.lock_file == True:
+            while c.lock_file == True:
                 time.sleep(0.01)
             c.lock_file = True
             log_file = open(c.log_file, 'a')
