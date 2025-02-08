@@ -53,21 +53,29 @@ def send_normal_capture(ch):
     #                      body="old")
     # else:
     d = datetime.now()
-    new_name = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
-    try:
-        if c.lock_file == True:
-            time.sleep(0.01)
-        c.lock_file = True
-        os.rename(c.log_file, new_name)
-        c.lock_file = False
-        ch.basic_publish(exchange='',
-                         routing_key='S-T',
-                         body=new_name)
-    except FileNotFoundError:
-        print_in_log("Transfer started but no captures found. Stop transfer phase...")
-    except FileExistsError:
-        print_in_log("Something strange happened (datetime_now?)")
-        exit(0)
+    name_with_date = c.log_file[:-4] + "_"+str(d.date())+"_{}{}{}_{}{}{}.txt".format(d.day,d.month,d.year,d.hour,d.minute,d.second)
+    new_name_list = []
+    if (c.debug_transfer): # Si può effettuare sempre il trasferimento di tutti i file della cartella rimuovendo questo if e mantenendo solo la riga della prima condizione.
+        new_name_list = [os.path.join(c.measures_dir,file) for file in os.listdir(c.measures_dir) if os.path.isfile(os.path.join(c.measures_dir, file)) and file.endswith('.txt')]
+    else:
+        new_name_list = new_name_list.append(name_with_date)
+
+    for new_name in new_name_list:
+        try:
+            if (not c.debug_transfer):
+                if c.lock_file == True:
+                    time.sleep(0.01)
+                c.lock_file = True
+                os.rename(c.log_file, new_name)
+                c.lock_file = False
+            ch.basic_publish(exchange='',
+                            routing_key='S-T',
+                            body=new_name)
+        except FileNotFoundError:
+            print_in_log("Transfer started but no captures found. Stop transfer phase...")
+        except FileExistsError:
+            print_in_log("Something strange happened (datetime_now?)")
+            exit(0)
 
 def send_error_log(ch):
     print_in_log("[Invio a Transfer] Invio log di errore al transfer per invio.")

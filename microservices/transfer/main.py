@@ -132,13 +132,15 @@ def init_send_simple_data(logfile,transfering_error_log):
                     emptyfile = False
 
 
+    logfile_parts = logfile.rsplit("\\",1)
+    shutil.move(logfile, logfile_parts[0] + "\\old_captures\\" + logfile_parts[1])
 
     #os.remove(logfile)
     if emptyfile:
-        #os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
+        
+        os.remove(logfile_strings[0] + "temp." + logfile_strings[1])
         print_in_log("Trasferimento completato correttamente.")
     else:
-        #os.rename(logfile_strings[0] + "temp." + logfile_strings[1], logfile)
         print_in_log("Trasferimento completato, ma qualche entry non è stata inviata.")
 
 
