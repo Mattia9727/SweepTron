@@ -56,7 +56,7 @@ def sensing(ch):
             measure_ultraportable(ch, conn, location_name)                 #cattura lancia la funzione corrispondente
         elif c.device_type == "MS2090A" or c.device_type == "rack":
             condition = (iq_hour != datetime.datetime.now().hour)
-            if c.iq_mode == 1 or condition:
+            if (c.iq_mode == 1 or condition) and c.iq_mode != -1:
                 iq_measure_rack(ch, conn, location_name)
                 iq_hour = datetime.datetime.now().hour
             else:
